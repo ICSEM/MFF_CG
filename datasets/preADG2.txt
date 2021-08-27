@@ -1,0 +1,937 @@
+ADG
+130:0[@Override public AgelessEntityEffect copy() { return new AgelessEntityEffect(this);}
+143:0[@Override public boolean apply(Game game, Ability source) { int lifeGained = (Integer) this.getValue("gainedLife"); if (lifeGained > 0) { return new AddCountersSourceEffect(CounterType.P1P1.createInstance(lifeGained)).apply(game, source); } return false;}
+355:1[@Override public AgonizingDemiseEffect copy() { return new AgonizingDemiseEffect(this);}
+368:1[@Override public boolean apply(Game game, Ability source) { Permanent permanent = game.getPermanentOrLKIBattlefield(this.getTargetPointer().getFirst(game, source)); if (permanent != null) { Player controller = game.getPlayer(permanent.getControllerId()); if (controller != null) { int amount = permanent.getPower().getValue(); controller.damage(amount, source.getSourceId(), game, false, true); return true; } } return false;}
+1002:4[@Override public ArchitectsOfWillEffect copy() { return new ArchitectsOfWillEffect(this);}
+1015:4[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); Player targetPlayer = game.getPlayer(source.getFirstTarget()); if (targetPlayer == null || controller == null) { return false; } Cards cards = new CardsImpl(); int count = Math.min(targetPlayer.getLibrary().size(), 3); for (int i = 0; i < count; i++) { Card card = targetPlayer.getLibrary().removeFromTop(game); if (card != null) { cards.add(card); } } controller.lookAtCards("Architects of Will", cards, game); controller.putCardsOnTopOfLibrary(cards, game, source, true); return true;}
+1357:6[@Override public ArsenalThresherEffect copy() { return new ArsenalThresherEffect(this);}
+1370:6[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); if (controller == null) { return false; } Permanent arsenalThresher = game.getPermanentEntering(source.getSourceId()); FilterArtifactCard filter = new FilterArtifactCard(); filter.add(new AnotherCardPredicate()); if (controller.chooseUse(Outcome.Benefit, "Do you want to reveal other artifacts in your hand?", source, game)) { Cards cards = new CardsImpl(); if (controller.getHand().count(filter, source.getSourceId(), source.getControllerId(), game) > 0) { TargetCardInHand target = new TargetCardInHand(0, Integer.MAX_VALUE, filter); if (controller.choose(Outcome.Benefit, target, source.getSourceId(), game)) { for (UUID uuid : target.getTargets()) { cards.add(controller.getHand().get(uuid, game)); } if (arsenalThresher != null) { controller.revealCards(arsenalThresher.getIdName(), cards, game); arsenalThresher.addCounters(CounterType.P1P1.createInstance(cards.size()), game); } } } return true; } return false;}
+1752:7[@Override public AvenEffect copy() { return new AvenEffect(this);}
+1874:7[@Override public String getText(Mode mode) { StringBuilder sb = new StringBuilder(); sb.append("If you do, that creature has base power and toughness 3/1 and has flying for as long as it has a feather counter on it"); return sb.toString();}
+1938:7[@Override public AvenEffect2 copy() { return new AvenEffect2(this);}
+2014:7[@Override public boolean isInactive(Ability source, Game game) { Permanent creature = game.getPermanent(this.targetPointer.getFirst(game, source)); if (creature != null && creature.getCounters().getCount(CounterType.FEATHER) < 1) { return true; } return false;}
+3400:18[@Override public CrystallizationTriggeredAbility copy() { return new CrystallizationTriggeredAbility(this);}
+3511:18[@Override public String getRule() { return "When enchanted creature becomes the target of a spell or ability, exile that creature.";}
+4113:22[@Override public boolean apply(Game game, Ability source) { FilterControlledCreaturePermanent filter = new FilterControlledCreaturePermanent("monocolored creature"); Player player = game.getPlayer(targetPointer.getFirst(game, source)); if (player == null) { return false; } filter.add(new MonocoloredPredicate()); int amount; int realCount = game.getBattlefield().countAll(filter, player.getId(), game); amount = Math.min(1, realCount); Target target = new TargetControlledPermanent(amount, amount, filter, false); target.setNotTarget(true); if (amount > 0 && target.canChoose(source.getSourceId(), player.getId(), game)) { boolean abilityApplied = false; while (player.canRespond() && !target.isChosen() && target.canChoose(player.getId(), game)) { player.choose(Outcome.Sacrifice, target, source.getSourceId(), game); } for (int idx = 0; idx < target.getTargets().size(); idx++) { Permanent permanent = game.getPermanent((UUID) target.getTargets().get(idx)); if (permanent != null) { abilityApplied |= permanent.sacrifice(source.getSourceId(), game); } } return abilityApplied; } return false;}
+4338:22[@Override public DefilerOfSoulsEffect copy() { return new DefilerOfSoulsEffect(this);}
+4927:27[@Override public DragonAppeasementTriggeredAbility copy() { return new DragonAppeasementTriggeredAbility(this);}
+5007:27[@Override public String getRule() { return "Whenever you sacrifice a creature, " + super.getRule();}
+5308:29[@Override public boolean apply(Game game, Ability source) { Player you = game.getPlayer(source.getControllerId()); you.discardToMax(game); you.drawCards(7, game); Cards hand = you.getHand(); for (int i = 0; i < 3; i++) { Card card = hand.getRandom(game); if (card != null) { you.discard(card, source, game); } } return false;}
+5401:29[@Override public DrasticRevelationEffect copy() { return new DrasticRevelationEffect(this);}
+5577:30[@Override public EnigmaSphinxTriggeredAbility copy() { return new EnigmaSphinxTriggeredAbility(this);}
+5692:30[@Override public String getRule() { return "When {this} is put into your graveyard from the battlefield, " + super.getRule();}
+5735:30[@Override public EnigmaSphinxEffect copy() { return new EnigmaSphinxEffect(this);}
+5748:30[@Override public boolean apply(Game game, Ability source) { Card card = game.getCard(source.getSourceId()); if (card != null && game.getState().getZone(source.getSourceId()) == Zone.GRAVEYARD) { Player owner = game.getPlayer(card.getOwnerId()); if (owner != null && card.moveToZone(Zone.LIBRARY, source.getSourceId(), game, true)) { game.informPlayers(card.getLogName() + " is put into " + owner.getLogName() + "'s library third from the top"); Library lib = owner.getLibrary(); if (lib != null) { Card card1 = lib.removeFromTop(game); if (card1 != null && card1.getId().equals(source.getSourceId())) { Card card2 = lib.removeFromTop(game); Card card3 = lib.removeFromTop(game); lib.putOnTop(card1, game); if (card3 != null) { lib.putOnTop(card3, game); } if (card2 != null) { lib.putOnTop(card2, game); } return true; } } } } return false;}
+6986:38[@Override public boolean apply(Game game, Ability source) { Player player = game.getPlayer(source.getControllerId()); if (player != null) { int life = game.getBattlefield().count(filter, source.getSourceId(), source.getControllerId(), game) * 3; player.gainLife(life, game); } return true;}
+7051:38[@Override public FiligreeAngelEffect copy() { return new FiligreeAngelEffect(this);}
+7168:39[@Override public FinestHourAbility copy() { return new FinestHourAbility(this);}
+7297:39[@Override public String getRule() { return "Whenever a creature you control attacks alone, if it's the first combat phase of the turn, untap that creature. After this phase, there is an additional combat phase.";}
+7332:39[@Override public FinestHourEffect copy() { return new FinestHourEffect(this);}
+7345:39[@Override public boolean apply(Game game, Ability source) { Permanent permanent = game.getPermanent(this.getTargetPointer().getFirst(game, source)); if (permanent != null) { permanent.untap(game); game.getState().getTurnMods().add(new TurnMod(source.getControllerId(), TurnPhase.COMBAT, null, false)); return true; } return false;}
+9033:51[@Override public boolean apply(Game game, Ability source) { Player player = game.getPlayer(source.getFirstTarget()); if (player != null) { for (UUID cid : player.getHand().copy()) { Card c = game.getCard(cid); if (c != null) { c.moveToExile(null, null, source.getSourceId(), game); } } for (UUID cid : player.getGraveyard().copy()) { Card c = game.getCard(cid); if (c != null) { c.moveToExile(null, null, source.getSourceId(), game); } } return true; } return false;}
+9153:51[@Override public IdentityCrisisEffect copy() { return new IdentityCrisisEffect(this);}
+10065:57[@Override public KarrthusEffect copy() { return new KarrthusEffect(this);}
+10078:57[@Override public boolean apply(Game game, Ability source) { FilterPermanent filter = new FilterPermanent(); filter.add(new SubtypePredicate("Dragon")); List<Permanent> dragons = game.getBattlefield().getAllActivePermanents(filter, game); for (Permanent dragon : dragons) { ContinuousEffect effect = new KarrthusControlEffect(source.getControllerId()); effect.setTargetPointer(new FixedTarget(dragon.getId())); game.addEffect(effect, source); } for (Permanent dragon : dragons) { dragon.untap(game); } return true;}
+10239:57[@Override public KarrthusControlEffect copy() { return new KarrthusControlEffect(this);}
+10252:57[@Override public boolean apply(Game game, Ability source) { Permanent dragon = game.getPermanent(targetPointer.getFirst(game, source)); if (dragon != null && controllerId != null) { return dragon.changeControllerId(controllerId, game); } return false;}
+10742:60[@Override public KnightOfNewAlaraEffect copy() { return new KnightOfNewAlaraEffect(this);}
+10755:60[@Override public boolean apply(Game game, Ability source) { for (Permanent creature : game.getBattlefield().getAllActivePermanents(filter, source.getControllerId(), game)) { if (creature != null && !creature.getId().equals(source.getSourceId())) { int colors = creature.getColor(game).getColorCount(); creature.addPower(colors); creature.addToughness(colors); } } return true;}
+11112:62[@Override public LavalancheEffect copy() { return new LavalancheEffect(this);}
+11125:62[@Override public boolean apply(Game game, Ability source) { Player targetPlayer = game.getPlayer(source.getFirstTarget()); if (targetPlayer == null) { return false; } targetPlayer.damage(amount.calculate(game, source, this), source.getSourceId(), game, false, true); FilterPermanent filter = new FilterPermanent("and each creature he or she controls"); filter.add(new CardTypePredicate(CardType.CREATURE)); filter.add(new ControllerIdPredicate(targetPlayer.getId())); List<Permanent> permanents = game.getBattlefield().getActivePermanents(filter, source.getControllerId(), source.getSourceId(), game); for (Permanent permanent : permanents) { permanent.damage(amount.calculate(game, source, this), source.getSourceId(), game, false, true); } return true;}
+11830:65[@Override public boolean apply(Game game, Ability source) { DynamicValue amount = new CountersCount(CounterType.CHARGE); for (UUID playerId : game.getOpponents(source.getControllerId())) { Player player = game.getPlayer(playerId); if (player != null) { player.damage(amount.calculate(game, source, this), source.getSourceId(), game, false, true); } } return true;}
+11909:65[@Override public DamageOpponentsEffect copy() { return new DamageOpponentsEffect(this);}
+12484:69[@Override public MaelstromNexusGainCascadeFirstSpellEffect copy() { return new MaelstromNexusGainCascadeFirstSpellEffect(this);}
+12497:69[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); if (controller != null) { for (StackObject stackObject : game.getStack()) { if ((stackObject instanceof Spell) && !stackObject.isCopy() && stackObject.getControllerId().equals(source.getControllerId())) { Spell spell = (Spell) stackObject; FirstSpellCastThisTurnWatcher watcher = (FirstSpellCastThisTurnWatcher) game.getState().getWatchers().get("FirstSpellCastThisTurn"); if (watcher != null && spell.getId().equals(watcher.getIdOfFirstCastSpell(source.getControllerId()))) { game.getState().addOtherAbility(spell.getCard(), cascadeAbility); } } } return true; } return false;}
+12772:69[@Override public FirstSpellCastThisTurnWatcher copy() { return new FirstSpellCastThisTurnWatcher(this);}
+12805:69[public UUID getIdOfFirstCastSpell(UUID playerId) { if (playerFirstSpellCast.get(playerId) == null) { return playerFirstCastSpell.get(playerId); } else { return playerFirstSpellCast.get(playerId); }}
+13432:74[@Override public MayaelsAriaEffect copy() { return new MayaelsAriaEffect(this);}
+13445:74[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); if (controller == null) { return false; } FilterCreaturePermanent filter = new FilterCreaturePermanent(); filter.add(new PowerPredicate(Filter.ComparisonType.GreaterThan, 4)); if (game.getState().getBattlefield().countAll(filter, controller.getId(), game) > 0) { for (Permanent creature : game.getBattlefield().getAllActivePermanents(filter, source.getControllerId(), game)) { creature.addCounters(CounterType.P1P1.createInstance(), game); } } game.applyEffects();}
+13730:75[@Override public MeddlingMageReplacementEffect copy() { return new MeddlingMageReplacementEffect(this);}
+13813:75[@Override public boolean applies(GameEvent event, Ability source, Game game) { MageObject object = game.getObject(event.getSourceId()); return object != null && !object.isCopy() && object.getName().equals(game.getState().getValue(source.getSourceId().toString() + NameACardEffect.INFO_KEY));}
+14097:77[@Override public MindFuneralEffect copy() { return new MindFuneralEffect(this);}
+14110:77[@Override public boolean apply(Game game, Ability source) { Player opponent = game.getPlayer(getTargetPointer().getFirst(game, source)); if (opponent != null) { Cards cards = new CardsImpl(); int landsFound = 0; while (landsFound < 4 && opponent.getLibrary().size() > 0) { Card card = opponent.getLibrary().removeFromTop(game); if (card == null) { break; } if (card.getCardType().contains(CardType.LAND)) { landsFound++; } cards.add(card); } opponent.revealCards("Mind Funeral", cards, game); opponent.moveCards(cards, Zone.LIBRARY, Zone.GRAVEYARD, source, game); return true; } return false;}
+14603:80[@Override public MorbidBloomEffect copy() { return new MorbidBloomEffect(this);}
+14616:80[@Override public boolean apply(Game game, Ability source) { Card targetCreatureCard = game.getCard(source.getFirstTarget()); if (targetCreatureCard != null) { targetCreatureCard.moveToExile(null, null, source.getSourceId(), game); int toughness = targetCreatureCard.getToughness().getValue(); SaprolingToken token = new SaprolingToken(); return token.putOntoBattlefield(toughness, game, source.getSourceId(), source.getControllerId()); } return false;}
+14966:81[@Override public String getRule() { return "Whenever Mycoid Shepherd or another creature you control with power 5 or greater dies, you may gain 5 life.";}
+14976:81[@Override public MycoidShepherdTriggeredAbility copy() { return new MycoidShepherdTriggeredAbility(this);}
+15493:84[@Override public boolean apply(Game game, Ability source) { Player player = game.getPlayer(source.getFirstTarget()); if (player == null) { return false; } int count = 0; for (Card card : player.getGraveyard().getCards(new FilterCreatureCard(), game)) { if (card.moveToExile(source.getSourceId(), "Necromancer Covenant", source.getSourceId(), game)) { count += 1; } } ZombieToken zombieToken = new ZombieToken(); if (zombieToken.putOntoBattlefield(count, game, source.getSourceId(), source.getControllerId())) { return true; } return false;}
+15599:84[@Override public NecromancersConvenantEffect copy() { return new NecromancersConvenantEffect(this);}
+15764:85[@Override public NemesisOfReasonTriggeredAbility copy() { return new NemesisOfReasonTriggeredAbility(this);}
+15869:85[@Override public String getRule() { return "Whenever {this} attacks, defending player puts the top ten cards of his or her library into his or her graveyard.";}
+16433:89[@Override public void watch(GameEvent event, Game game) { if (event.getType() == GameEvent.EventType.SPELL_CAST && game.getActivePlayerId().equals(event.getPlayerId()) && game.getOpponents(controllerId).contains(event.getPlayerId())) { Spell spell = (Spell) game.getObject(event.getTargetId()); if (spell.getCardType().contains(CardType.CREATURE)) { condition = true; } }}
+16513:89[@Override public CastCreatureWatcher copy() { return new CastCreatureWatcher(this);}
+16807:91[@Override public RetaliatorGriffinTriggeredAbility copy() { return new RetaliatorGriffinTriggeredAbility(this);}
+16921:91[@Override public String getRule() { return "Whenever a source an opponent controls deals damage to you, you may put that many +1/+1 counters on {this}.";}
+16956:91[@Override public RetaliatorGriffinEffect copy() { return new RetaliatorGriffinEffect(this);}
+16969:91[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); if (controller != null) { Permanent permanent = game.getPermanent(source.getSourceId()); Integer amount = (Integer) this.getValue("damageAmount"); if (permanent != null && amount != null && amount > 0) { new AddCountersSourceEffect(CounterType.P1P1.createInstance(amount), true).apply(game, source); } return true; } return false;}
+17303:93[@Override public SagesOfTheAnimaReplacementEffect copy() { return new SagesOfTheAnimaReplacementEffect(this);}
+17634:93[@Override public boolean applies(GameEvent event, Ability source, Game game) { return event.getPlayerId().equals(source.getControllerId());}
+18224:97[@Override public SenTripletsRuleModifyingEffect copy() { return new SenTripletsRuleModifyingEffect(this);}
+18359:97[@Override public boolean applies(GameEvent event, Ability source, Game game) { return event.getPlayerId().equals(getTargetPointer().getFirst(game, source));}
+18429:97[@Override public boolean apply(Game game, Ability source) { Player player = game.getPlayer(getTargetPointer().getFirst(game, source)); if (player != null) { player.revealCards(player.getName() + "'s hand cards", player.getHand(), game, false); } return true;}
+18484:97[@Override public SenTripletsOpponentRevealsHandEffect copy() { return new SenTripletsOpponentRevealsHandEffect(this);}
+18549:97[@Override public SenTripletsPlayFromOpponentsHandEffect copy() { return new SenTripletsPlayFromOpponentsHandEffect(this);}
+18562:97[@Override public boolean applies(UUID objectId, Ability source, UUID affectedControllerId, Game game) { Card card = game.getCard(objectId); return card != null && card.getOwnerId().equals(getTargetPointer().getFirst(game, source)) && game.getState().getZone(objectId).equals(Zone.HAND) && affectedControllerId.equals(source.getControllerId());}
+19137:100[@Override public SigilCaptainTriggeredAbility copy() { return new SigilCaptainTriggeredAbility(this);}
+19150:100[@Override public String getRule() { StringBuilder sb = new StringBuilder(); sb.append("Whenever a creature enters the battlefield under your control, if that creature is 1/1, put two +1/+1 counters on it"); return sb.toString();}
+19585:103[@Override public SingeMindOgreEffect copy() { return new SingeMindOgreEffect(this);}
+19598:103[@Override public boolean apply(Game game, Ability source) { Player targetPlayer = game.getPlayer(source.getFirstTarget()); if (targetPlayer != null && targetPlayer.getHand().size() > 0) { Cards revealed = new CardsImpl(); Card card = targetPlayer.getHand().getRandom(game); revealed.add(card); targetPlayer.revealCards("Singe-Mind Ogre", revealed, game); targetPlayer.loseLife(card.getManaCost().convertedManaCost(), game); return true; } return false;}
+19938:105[@Override public SlaveOfBolasEffect copy() { return new SlaveOfBolasEffect(this);}
+19951:105[@Override public boolean apply(Game game, Ability source) { Permanent permanent = game.getPermanent(source.getFirstTarget()); if (permanent != null) { SacrificeTargetEffect sacrificeEffect = new SacrificeTargetEffect("sacrifice this", source.getControllerId()); sacrificeEffect.setTargetPointer(new FixedTarget(permanent, game)); DelayedTriggeredAbility delayedAbility = new AtTheBeginOfNextEndStepDelayedTriggeredAbility(sacrificeEffect); game.addDelayedTriggeredAbility(delayedAbility, source); return true; } return false;}
+20319:107[@Override public SoulquakeEffect copy() { return new SoulquakeEffect(this);}
+20332:107[@Override public boolean apply(Game game, Ability source) { for (Permanent permanent : game.getBattlefield().getActivePermanents(filter, source.getControllerId(), source.getSourceId(), game)) { permanent.moveToZone(Zone.HAND, source.getSourceId(), game, true); } for (UUID playerId : game.getState().getPlayersInRange(source.getControllerId(), game)) { Player player = game.getPlayer(playerId); if (player != null) { for (Card card : player.getGraveyard().getCards(filter2, game)) { card.moveToZone(Zone.HAND, source.getSourceId(), game, true); } } } return true;}
+21775:116[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); MageObject sourceObject = game.getObject(source.getSourceId()); String cardName = (String) game.getState().getValue(source.getSourceId().toString() + NameACardEffect.INFO_KEY); if (sourceObject != null && controller != null && cardName != null && !cardName.isEmpty()) { Player targetPlayer = game.getPlayer(source.getFirstTarget()); if (targetPlayer != null) { targetPlayer.revealCards("hand of " + targetPlayer.getName(), targetPlayer.getHand(), game); int cardsFound = 0; for (Card card : targetPlayer.getHand().getCards(game)) { if (card.getName().equals(cardName)) { cardsFound++; } } if (cardsFound > 0) { targetPlayer.damage(3 * cardsFound, source.getSourceId(), game, false, true); } FilterCard filterNamedCards = new FilterCard(); filterNamedCards.add(new NamePredicate(cardName)); for (Card checkCard : targetPlayer.getGraveyard().getCards(game)) { if (checkCard.getName().equals(cardName)) { controller.moveCardToExileWithInfo(checkCard, null, "", source.getSourceId(), game, Zone.GRAVEYARD, true); } } TargetCardInHand targetCardsHand = new TargetCardInHand(0, Integer.MAX_VALUE, filterNamedCards); controller.chooseTarget(outcome, targetPlayer.getGraveyard(), targetCardsHand, source, game); for (UUID cardId : targetCardsHand.getTargets()) { Card card = game.getCard(cardId); if (card != null) { controller.moveCardToExileWithInfo(card, null, "", source.getSourceId(), game, Zone.HAND, true); } } TargetCardInLibrary targetCardsLibrary = new TargetCardInLibrary(0, Integer.MAX_VALUE, filterNamedCards); controller.searchLibrary(targetCardsLibrary, game, targetPlayer.getId()); for (UUID cardId : targetCardsLibrary.getTargets()) { Card card = game.getCard(cardId); if (card != null) { controller.moveCardToExileWithInfo(card, null, "", source.getSourceId(), game, Zone.LIBRARY, true); } } targetPlayer.shuffleLibrary(game); return true; } } return false;}
+22152:116[@Override public ThoughtHemorrhageEffect copy() { return new ThoughtHemorrhageEffect(this);}
+22359:117[@Override public ThraximundarTriggeredAbility copy() { return new ThraximundarTriggeredAbility(this);}
+22465:117[@Override public String getRule() { return "Whenever {this} attacks, defending player sacrifices a creature.";}
+22591:117[@Override public PlayerSacrificesCreatureTriggeredAbility copy() { return new PlayerSacrificesCreatureTriggeredAbility(this);}
+22577:117[@Override public String getRule() { return "Whenever a player sacrifices a creature, " + super.getRule();}
+22889:119[@Override public TraceOfAbundanceTriggeredAbility copy() { return new TraceOfAbundanceTriggeredAbility(this);}
+22967:119[@Override public String getRule() { return "Whenever enchanted land is tapped for mana, its controller adds one mana of any color to his or her mana pool.";}
+23121:120[@Override public UnbenderTineEffect copy() { return new UnbenderTineEffect(this);}
+23134:120[@Override public boolean apply(Game game, Ability source) { Permanent targetPermanent = game.getPermanent(source.getFirstTarget()); if (targetPermanent == null) { return false; } return targetPermanent.untap(game);}
+23349:121[@Override public UnscytheKillerOfKingsTriggeredAbility copy() { return new UnscytheKillerOfKingsTriggeredAbility(this);}
+23385:121[@Override public boolean checkTrigger(GameEvent event, Game game) { if (((ZoneChangeEvent) event).isDiesEvent()) { ZoneChangeEvent zEvent = (ZoneChangeEvent) event; if (zEvent.getTarget().getCardType().contains(CardType.CREATURE)) { } }}
+23868:124[@Override public VectisDominatorEffect copy() { return new VectisDominatorEffect(this);}
+23881:124[@Override public boolean apply(Game game, Ability source) { Permanent targetCreature = game.getPermanent(source.getFirstTarget()); if (targetCreature != null) { Player player = game.getPlayer(targetCreature.getControllerId()); if (player != null) { cost.clearPaid(); final StringBuilder sb = new StringBuilder("Pay 2 life? (Otherwise ").append(targetCreature.getName()).append(" will be tapped)"); if (player.chooseUse(Outcome.Benefit, sb.toString(), source, game)) { cost.pay(source, game, targetCreature.getControllerId(), targetCreature.getControllerId(), true, null); } if (!cost.isPaid()) { return targetCreature.tap(game); } } } return false;}
+24232:125[@Override public String getRule() { return "Whenever {this} becomes blocked, defending player loses 4 life.";}
+24242:125[@Override public VedalkenGhoulTriggeredAbility copy() { return new VedalkenGhoulTriggeredAbility(this);}
+24384:126[@Override public VengefulRebirthEffect copy() { return new VengefulRebirthEffect(this);}
+24397:126[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); Card card = (Card) game.getObject(source.getFirstTarget()); if (controller != null && card != null && controller.removeFromGraveyard(card, game)) { controller.moveCards(card, Zone.GRAVEYARD, Zone.HAND, source, game); if (!card.getCardType().contains(CardType.LAND)) { int damage = card.getManaCost().convertedManaCost(); Permanent permanent = game.getPermanent(source.getTargets().get(1).getFirstTarget()); if (permanent != null) { permanent.damage(damage, source.getSourceId(), game, false, true); } Player targetPlayer = game.getPlayer(source.getTargets().get(1).getFirstTarget()); if (targetPlayer != null) { targetPlayer.damage(damage, source.getSourceId(), game, false, true); } } return true; } return false;}
+24996:130[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); if (controller == null) { return false; } FilterPermanentCard filter = new FilterPermanentCard("permanent card with converted mana cost X or less"); filter.add(new ConvertedManaCostPredicate(Filter.ComparisonType.LessThan, source.getManaCostsToPay().getX() + 1)); TargetCardInLibrary target = new TargetCardInLibrary(filter); if (controller.searchLibrary(target, game)) { if (target.getTargets().size() > 0) { Card card = controller.getLibrary().getCard(target.getFirstTarget(), game); if (card != null) { controller.moveCards(card, Zone.BATTLEFIELD, source, game); } } } controller.shuffleLibrary(game); return false;}
+25132:130[@Override public WargateEffect copy() { return new WargateEffect(this);}
+26237:139[@Override public BrowseEffect copy() { return new BrowseEffect(this);}
+26250:139[@Override public boolean apply(Game game, Ability source) { Player player = game.getPlayer(source.getControllerId()); if (player != null) { Cards cards = new CardsImpl(); int cardsCount = Math.min(5, player.getLibrary().size()); for (int i = 0; i < cardsCount; i++) { Card card = player.getLibrary().removeFromTop(game); if (card != null) { cards.add(card); } } if (cards.size() > 0) { player.lookAtCards("Browse", cards, game); TargetCard target = new TargetCard(Zone.LIBRARY, new FilterCard("card to put in your hand")); if (player.choose(Outcome.Benefit, cards, target, game)) { Card card = cards.get(target.getFirstTarget(), game); if (card != null) { card.moveToZone(Zone.HAND, source.getSourceId(), game, false); cards.remove(card); } } for (Card card : cards.getCards(game)) { card.moveToExile(null, null, source.getSourceId(), game); } } return true; } return false;}
+26626:140[@Override public BurnoutCounterTargetEffect copy() { return new BurnoutCounterTargetEffect(this);}
+26639:140[@Override public boolean apply(Game game, Ability source) { Spell targetSpell = game.getStack().getSpell(source.getFirstTarget()); if (targetSpell != null && targetSpell.getColor(game).isBlue()) { game.getStack().counter(source.getFirstTarget(), source.getSourceId(), game); } return true;}
+26994:143[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); if (controller != null) { for (UUID playerId : game.getState().getPlayersInRange(controller.getId(), game)) { Player player = game.getPlayer(playerId); if (player != null) { for (Card card : player.getHand().getCards(game)) { card.moveToZone(Zone.LIBRARY, source.getSourceId(), game, true); } for (Card card : player.getGraveyard().getCards(game)) { card.moveToZone(Zone.LIBRARY, source.getSourceId(), game, true); } player.shuffleLibrary(game); } } for (Card card : controller.getLibrary().getTopCards(game, 10)) { controller.moveCardToExileWithInfo(card, null, "", source.getSourceId(), game, Zone.LIBRARY, true); } for (UUID playerId : game.getState().getPlayersInRange(controller.getId(), game)) { Player player = game.getPlayer(playerId); if (player != null) { int cardsToDrawCount = player.getAmount(0, 7, "How many cards to draw (up to 7)?", game); player.drawCards(cardsToDrawCount, game); } } } return true;}
+27215:143[@Override public DiminishingReturnsEffect copy() { return new DiminishingReturnsEffect(this);}
+27505:145[@Override public boolean apply(Game game, Ability source) { Permanent permanent = (Permanent) game.getLastKnownInformation(source.getFirstTarget(), Zone.BATTLEFIELD); if (permanent != null) { Player player = game.getPlayer(source.getControllerId()); if (player != null) { player.gainLife(permanent.getToughness().getValue(), game); } } return false;}
+27576:145[@Override public ExileEffect copy() { return new ExileEffect(this);}
+28021:149[@Override public void adjustTargets(Ability ability, Game game) { if (ability.getOriginalId().equals(originalId)) { int xValue = ability.getManaCostsToPay().getX(); ability.getTargets().clear(); FilterArtifactPermanent filter = new FilterArtifactPermanent(new StringBuilder("noncreature artifact with converted mana cost ").append(xValue).toString()); filter.add(new ConvertedManaCostPredicate(Filter.ComparisonType.Equal, xValue)); filter.add(Predicates.not(new CardTypePredicate(CardType.CREATURE))); Target target = new TargetPermanent(filter); ability.addTarget(target); }}
+28146:149[@Override public GorillaShaman1 copy() { return new GorillaShaman1(this);}
+28454:151[@Override public HelmOfObedienceEffect copy() { return new HelmOfObedienceEffect(this);}
+28467:151[@Override public boolean apply(Game game, Ability source) { Player targetOpponent = game.getPlayer(targetPointer.getFirst(game, source)); if (targetOpponent != null) { int max = amount.calculate(game, source, this); if (max != 0) { int numberOfCard = 0; while (targetOpponent.getLibrary().size() > 0) { Card card = targetOpponent.getLibrary().removeFromTop(game); if (card != null) { if (targetOpponent.moveCards(card, Zone.LIBRARY, Zone.GRAVEYARD, source, game)) { if (card.getCardType().contains(CardType.CREATURE)) { Permanent sourcePermanent = game.getPermanent(source.getSourceId()); if (sourcePermanent != null) { sourcePermanent.sacrifice(source.getSourceId(), game); } if (game.getState().getZone(card.getId()).equals(Zone.GRAVEYARD)) { card.putOntoBattlefield(game, Zone.GRAVEYARD, source.getSourceId(), source.getControllerId()); } break; } else { numberOfCard++; if (numberOfCard >= max) { break; } } } } else { return false; } } } return true; } return false;}
+29804:159[@Override public LimDulsPaladinEffect copy() { return new LimDulsPaladinEffect(this);}
+29817:159[@Override public boolean apply(Game game, Ability source) { Permanent permanent = game.getPermanent(source.getSourceId()); if (permanent != null) { super.apply(game, source); if (game.getPermanent(source.getSourceId()) == null) { return new DrawCardSourceControllerEffect(1).apply(game, source); } return true; } return false;}
+31344:170[@Override public SoldeviDiggerEffect copy() { return new SoldeviDiggerEffect(this);}
+31357:170[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); if (controller != null) { Card topCard = null; for (Card card : controller.getGraveyard().getCards(game)) { topCard = card; } if (topCard != null) { return controller.moveCardToLibraryWithInfo(topCard, source.getSourceId(), game, Zone.GRAVEYARD, false, true); } return true; } return false;}
+31783:172[@Override public SoldeviSageEffect copy() { return new SoldeviSageEffect(this);}
+31796:172[@Override public boolean apply(Game game, Ability source) { Player player = game.getPlayer(source.getControllerId()); if (player != null) { Cards initialHand = player.getHand().copy(); player.drawCards(3, game); Cards drawnCards = new CardsImpl(); for (UUID cardId : player.getHand()) { if (!initialHand.contains(cardId)) { drawnCards.add(cardId); } } if (drawnCards.size() > 0) { TargetCard cardToDiscard = new TargetCard(Zone.HAND, new FilterCard("card to discard")); cardToDiscard.setNotTarget(true); if (player.choose(Outcome.Discard, drawnCards, cardToDiscard, game)) { Card card = player.getHand().get(cardToDiscard.getFirstTarget(), game); if (card != null) { return player.discard(card, source, game); } } } return true; } return false;}
+32261:174[@Override public Mana getMana(Game game, Ability source) { ObjectColor color = (ObjectColor) game.getState().getValue(source.getSourceId() + "_color"); if (color != null) { return new Mana(ColoredManaSymbol.lookup(color.toString().charAt(0))); } else { return null; }}
+32320:174[@Override public SolGrailManaEffect copy() { return new SolGrailManaEffect(this);}
+32615:176[@Override public SustainingSpiritReplacementEffect copy() { return new SustainingSpiritReplacementEffect(this);}
+32766:176[@Override public boolean replaceEvent(GameEvent event, Ability source, Game game) { return false;}
+34161:186[@Override public void adjustTargets(Ability ability, Game game) { if (ability.getOriginalId().equals(originalId)) { int xValue = ability.getManaCostsToPay().getX(); ability.getTargets().clear(); ability.addTarget(new TargetLandPermanent(xValue, xValue, new FilterLandPermanent(), false)); }}
+34235:186[@Override public CandelabraOfTawnos copy() { return new CandelabraOfTawnos(this);}
+34609:189[@Override public boolean applies(Player player, Ability source, Game game) { return true;}
+34629:189[@Override public DampingFieldEffect copy() { return new DampingFieldEffect(this);}
+34813:190[@Override public Set<UUID> possibleTargets(UUID sourceId, UUID sourceControllerId, Game game) { Set<UUID> possibleTargets = new HashSet<>(); MageObject object = game.getObject(sourceId); if (object != null && object instanceof StackObject) { Player targetPlayer = game.getPlayer(((StackObject) object).getStackAbility().getFirstTarget()); if (targetPlayer != null) { for (Card card : targetPlayer.getGraveyard().getCards(filter, sourceId, sourceControllerId, game)) { if (!game.replaceEvent(GameEvent.getEvent(GameEvent.EventType.TARGET, card.getId(), sourceId, sourceControllerId))) { possibleTargets.add(card.getId()); } } } } return possibleTargets;}
+34938:190[@Override public DrafnasRestorationTarget copy() { return new DrafnasRestorationTarget(this);}
+34982:190[@Override public DrafnasRestorationEffect copy() { return new DrafnasRestorationEffect(this);}
+34995:190[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); if (controller != null) { Cards cards = new CardsImpl(source.getTargets().get(1).getTargets()); controller.putCardsOnTopOfLibrary(cards, game, source, true); return true; } return false;}
+35283:192[@Override public GateToPhyrexiaAbility copy() { return new GateToPhyrexiaAbility(this);}
+35344:192[@Override public String getRule() { return "Sacrifice a creature: Destroy target artifact. Activate this ability only during your upkeep and only once each turn.";}
+35462:193[@Override public boolean apply(Game game, Ability source) { Player player = game.getPlayer(source.getControllerId()); if (player != null) { int amount = player.getHand().size() - 4; if (amount > 0) { player.gainLife(amount, game); } return true; } return false;}
+35526:193[@Override public IvoryTowerEffect copy() { return new IvoryTowerEffect(this);}
+36168:197[@Override public boolean applies(Ability abilityToModify, Ability source, Game game) { Permanent artifact = game.getPermanent(abilityToModify.getSourceId()); if (artifact != null && artifact.getAttachments().contains(source.getSourceId())) { if (abilityToModify.getAbilityType().equals(AbilityType.ACTIVATED) || (abilityToModify.getAbilityType().equals(AbilityType.MANA) && (abilityToModify instanceof ActivatedAbility))) { return true; } } return false;}
+36247:197[@Override public PowerArtifactCostModificationEffect copy() { return new PowerArtifactCostModificationEffect(this);}
+36522:199[@Override public TransmuteArtifactEffect copy() { return new TransmuteArtifactEffect(this);}
+36535:199[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); if (controller == null) { return false; } int convertedManaCost = 0; boolean sacrifice = false; TargetControlledPermanent targetArtifact = new TargetControlledPermanent(new FilterControlledArtifactPermanent()); if (controller.chooseTarget(Outcome.Sacrifice, targetArtifact, source, game)) { Permanent permanent = game.getPermanent(targetArtifact.getFirstTarget()); if (permanent != null) { convertedManaCost = permanent.getManaCost().convertedManaCost(); sacrifice = permanent.sacrifice(source.getSourceId(), game); } } else { return true; } if (sacrifice && controller.searchLibrary(target, game)) { if (target.getTargets().size() > 0) { for (UUID cardId : target.getTargets()) { Card card = controller.getLibrary().getCard(cardId, game); if (card != null) { if (card.getManaCost().convertedManaCost() <= convertedManaCost) { controller.moveCards(card, Zone.BATTLEFIELD, source, game); } else { GenericManaCost cost = new GenericManaCost(card.getManaCost().convertedManaCost() - convertedManaCost); if (cost.pay(source, game, source.getSourceId(), source.getControllerId(), false)) { controller.moveCards(card, Zone.BATTLEFIELD, source, game); } else { controller.moveCards(card, Zone.GRAVEYARD, source, game); } } } } } controller.shuffleLibrary(game); return true; } controller.shuffleLibrary(game); return false;}
+39261:215[@Override public ConsumeStrengthEffect copy() { return new ConsumeStrengthEffect(this);}
+39274:215[@Override public boolean apply(Game game, Ability source) { Permanent permanent = game.getPermanent(source.getFirstTarget()); if (permanent != null) { permanent.addPower(2); permanent.addToughness(2); } permanent = game.getPermanent(source.getTargets().get(1).getFirstTarget()); if (permanent != null) { permanent.addPower(-2); permanent.addToughness(-2); } return true;}
+40681:224[@Override public DodecapodEffect copy() { return new DodecapodEffect(this);}
+40694:224[@Override public boolean replaceEvent(GameEvent event, Ability source, Game game) { if (super.replaceEvent(event, source, game)) { new AddCountersSourceEffect(CounterType.P1P1.createInstance(2)).apply(game, source); return true; } return false;}
+40968:226[@Override public void adjustTargets(Ability ability, Game game) { if (ability instanceof SpellAbility) { if (KickedCondition.getInstance().apply(game, ability)) { getSpellAbility().addTarget(new TargetLandPermanent(new FilterLandPermanent("land (Kicker)"))); } }}
+41013:226[@Override public DwarvenLandslide copy() { return new DwarvenLandslide(this);}
+42104:234[@Override public GerrardCapashenEffect copy() { return new GerrardCapashenEffect(this);}
+42117:234[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); Player targetOpponent = game.getPlayer(this.getTargetPointer().getFirst(game, source)); if (controller != null && targetOpponent != null) { int cardsInHand = targetOpponent.getHand().size(); if (cardsInHand > 0) { controller.gainLife(cardsInHand, game); } return true; } return false;}
+42313:235[@Override public GerrardsVerdictEffect copy() { return new GerrardsVerdictEffect(this);}
+42326:235[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); Player targetPlayer = game.getPlayer(getTargetPointer().getFirst(game, source)); if (controller != null && targetPlayer != null) { controller.gainLife(targetPlayer.discard(2, false, source, game).count(new FilterLandCard(), game) * 3, game); return true; } return false;}
+43313:241[@Override public HauntedAngelEffect copy() { return new HauntedAngelEffect(this);}
+43326:241[@Override public boolean apply(Game game, Ability source) { UUID controllerId = source.getControllerId(); HauntedAngelToken token = new HauntedAngelToken(); for (UUID playerId : game.getState().getPlayersInRange(controllerId, game)) { if (!playerId.equals(controllerId)) { token.putOntoBattlefield(1, game, source.getSourceId(), playerId); } } return true;}
+43900:245[@Override public void adjustTargets(Ability ability, Game game) { if (ability instanceof SpellAbility && KickedCondition.getInstance().apply(game, ability)) { ability.addTarget(new TargetOtherCreaturePermanent(new FilterCreaturePermanent("another target creature"))); }}
+43953:245[@Override public Jilt copy() { return new Jilt(this);}
+43993:245[@Override public boolean canTarget(UUID controllerId, UUID id, Ability source, Game game) { if (source.getTargets().get(0).getTargets().contains(id)) { return false; } return super.canTarget(controllerId, id, source, game);}
+44041:245[@Override public TargetOtherCreaturePermanent copy() { return new TargetOtherCreaturePermanent(this);}
+46681:264[@Override public void adjustTargets(Ability ability, Game game) { if (ability instanceof SpellAbility) { if (KickedCondition.getInstance().apply(game, ability)) { ability.addTarget(new TargetCreaturePermanent()); } }}
+46731:264[@Override public OrimsThunder copy() { return new OrimsThunder(this);}
+46769:264[@Override public boolean apply(Game game, Ability source) { int damage = 0; MageObject firstTarget = game.getLastKnownInformation(source.getFirstTarget(), Zone.BATTLEFIELD); Permanent secondTarget = game.getPermanent(source.getTargets().get(1).getFirstTarget()); if (firstTarget != null) { damage = firstTarget.getManaCost().convertedManaCost(); } boolean kicked = KickedCondition.getInstance().apply(game, source); if (kicked && secondTarget != null) { secondTarget.damage(damage, source.getSourceId(), game, false, true); return true; } return false;}
+46878:264[@Override public OrimsThunderEffect2 copy() { return new OrimsThunderEffect2(this);}
+46920:264[@Override public boolean apply(Game game, Ability source) { Permanent target = game.getPermanent(source.getFirstTarget()); if (target != null) { return target.destroy(source.getSourceId(), game, false); } return false;}
+46966:264[@Override public OrimsThunderEffect copy() { return new OrimsThunderEffect(this);}
+47663:269[@Override public PerniciousDeedEffect copy() { return new PerniciousDeedEffect(this);}
+47676:269[@Override public boolean apply(Game game, Ability source) { FilterPermanent filter = new FilterPermanent("artifacts, creatures, and enchantments"); filter.add(Predicates.or(new CardTypePredicate(CardType.ARTIFACT), new CardTypePredicate(CardType.CREATURE), new CardTypePredicate(CardType.ENCHANTMENT))); filter.add(new ConvertedManaCostPredicate(Filter.ComparisonType.LessThan, source.getManaCostsToPay().getX() + 1)); for (Permanent permanent : game.getBattlefield().getActivePermanents(filter, source.getControllerId(), source.getSourceId(), game)) { permanent.destroy(source.getSourceId(), game, false); } return true;}
+48062:271[@Override public PutridWarriorDealsDamageTriggeredAbility copy() { return new PutridWarriorDealsDamageTriggeredAbility(this);}
+48139:271[@Override public String getRule() { return "Whenever {this} deals damage, " + super.getRule();}
+48182:271[@Override public PutridWarriorGainLifeEffect copy() { return new PutridWarriorGainLifeEffect(this);}
+48195:271[@Override public boolean apply(Game game, Ability source) { for (UUID playerId : game.getState().getPlayersInRange(source.getControllerId(), game)) { Player player = game.getPlayer(playerId); if (player != null) { player.gainLife(1, game); } } return true;}
+50594:287[@Override public SqueesRevengeEffect copy() { return new SqueesRevengeEffect(this);}
+50604:287[@Override public boolean apply(Game game, Ability source) { Player player = game.getPlayer(source.getControllerId()); if (player != null) { int number = player.announceXMana(0, Integer.MAX_VALUE, "Choose how many times to flip a coin", game, source); game.informPlayers(player.getLogName() + " chooses " + number + "."); for (int i = 0; i < number; i++) { if (!player.flipCoin(game)) { return true; } } player.drawCards(2 * number, game); return true; } return false;}
+51345:292[@Override public boolean apply(Game game, Ability source) { for (Permanent permanent : game.getBattlefield().getActivePermanents(filter, source.getControllerId(), source.getSourceId(), game)) { permanent.destroy(source.getSourceId(), game, false); } return true;}
+51394:292[@Override public TranquilPathEffect copy() { return new TranquilPathEffect(this);}
+51557:293[@Override public TundraKavuEffect copy() { return new TundraKavuEffect(this);}
+51567:293[@Override public void init(Ability source, Game game) { landTypes.clear(); Player controller = game.getPlayer(source.getControllerId()); if (controller != null) { Set<String> choiceSet = new LinkedHashSet<>(); choiceSet.add("Island"); choiceSet.add("Plains"); ChoiceImpl choice = new ChoiceImpl(true); choice.setChoices(choiceSet); choice.setMessage("Choose a basic land type"); controller.choose(outcome, choice, game); landTypes.add(choice.getChoice()); } else { this.discard(); } super.init(source, game);}
+52659:301[@Override public WildResearchEffect copy() { return new WildResearchEffect(this);}
+52672:301[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); MageObject sourceObject = game.getObject(source.getSourceId()); if (controller != null && sourceObject != null) { TargetCardInLibrary target = new TargetCardInLibrary(filter); if (controller.searchLibrary(target, game)) { if (target.getTargets().size() > 0) { Card card = controller.getLibrary().remove(target.getFirstTarget(), game); if (card != null) { controller.moveCards(card, null, Zone.HAND, source, game); Cards cards = new CardsImpl(); cards.add(card); controller.revealCards(sourceObject.getIdName(), cards, game, true); } } } controller.discardOne(true, source, game); controller.shuffleLibrary(game); return true; } return false;}
+53433:305[@Override public AliFromCairoReplacementEffect copy() { return new AliFromCairoReplacementEffect(this);}
+53559:305[@Override public boolean replaceEvent(GameEvent event, Ability source, Game game) { Player controller = game.getPlayer(source.getControllerId()); if (controller != null) { event.setAmount(controller.getLife() - 1); } return false;}
+54904:314[@Override public void init(Ability source, Game game) { super.init(source, game); game.getState().setValue("target" + source.getSourceId(), getTargetPointer().getFirst(game, source));}
+54945:314[@Override public OldManOfTheSeaGainControlTargetEffect copy() { return new OldManOfTheSeaGainControlTargetEffect(this);}
+54999:314[@Override public OldManOfTheSeaStateBasedTriggeredAbility copy() { return new OldManOfTheSeaStateBasedTriggeredAbility(this);}
+55012:314[@Override public boolean checkTrigger(GameEvent event, Game game) { Permanent sourcePermanent = game.getPermanent(getSourceId()); if (sourcePermanent != null && sourcePermanent.isTapped()) { UUID controlledCreatureId = (UUID) game.getState().getValue("target" + getSourceId()); if (controlledCreatureId != null) { Permanent controlledCreature = game.getPermanent(controlledCreatureId); if (controlledCreature != null) { if (controlledCreature.getPower().getValue() > sourcePermanent.getPower().getValue()) { game.getState().setValue("powerCondition" + getSourceId(), Boolean.TRUE); } } } } return false;}
+55957:318[@Override public boolean applies(Ability abilityToModify, Ability source, Game game) { return abilityToModify.getSourceId().equals(source.getSourceId()) && (abilityToModify instanceof SpellAbility) && new CardsInAllGraveyardsCount(new FilterCreatureCard()).calculate(game, source, this) >= 10;}
+56004:318[@Override public AvatarOfWoeCostReductionEffect copy() { return new AvatarOfWoeCostReductionEffect(this);}
+56372:320[@Override public DragonBreathEffect copy() { return new DragonBreathEffect(this);}
+56385:320[@Override public boolean apply(Game game, Ability source) { Card sourceCard = (Card) source.getSourceObjectIfItStillExists(game); Permanent permanent = game.getPermanent(this.getTargetPointer().getFirst(game, source)); Player controller = game.getPlayer(source.getControllerId()); if (sourceCard != null && permanent != null && controller != null) { game.getState().setValue("attachTo:" + sourceCard.getId(), permanent); if (controller.moveCards(sourceCard, Zone.BATTLEFIELD, source, game)) { permanent.addAttachment(sourceCard.getId(), game); } return true; } return false;}
+56759:322[@Override public MakeshiftMannequinEffect copy() { return new MakeshiftMannequinEffect(this);}
+56772:322[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); if (controller != null) { UUID cardId = this.getTargetPointer().getFirst(game, source); Card card = controller.getGraveyard().get(cardId, game); if (card != null) { Counters counters = new Counters(); counters.addCounter(CounterType.MANNEQUIN.createInstance()); game.setEnterWithCounters(cardId, counters); if (controller.moveCards(card, Zone.BATTLEFIELD, source, game)) { Permanent permanent = game.getPermanent(cardId); if (permanent != null) { ContinuousEffect gainedEffect = new MakeshiftMannequinGainAbilityEffect(); gainedEffect.setTargetPointer(new FixedTarget(permanent, game)); game.addEffect(gainedEffect, source); } } return true; } } return false;}
+57064:322[@Override public MakeshiftMannequinGainAbilityEffect copy() { return new MakeshiftMannequinGainAbilityEffect(this);}
+57015:322[@Override public boolean isInactive(Ability source, Game game) { Permanent permanent = game.getPermanent(this.getTargetPointer().getFirst(game, source)); return permanent == null || permanent.getCounters().getCount(CounterType.MANNEQUIN) < 1;}
+57700:326[@Override public YavimayaDryadEffect copy() { return new YavimayaDryadEffect(this);}
+57713:326[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); Player targetPlayer = game.getPlayer(getTargetPointer().getFirst(game, source)); if (controller == null || targetPlayer == null) { return false; } if (controller.searchLibrary(target, game)) { if (target.getTargets().size() > 0) { targetPlayer.moveCards(new CardsImpl(target.getTargets()).getCards(game), Zone.BATTLEFIELD, source, game, true, false, false, null); } controller.shuffleLibrary(game); return true; } return false;}
+58126:328[@Override public AggravateEffect copy() { return new AggravateEffect(this);}
+58139:328[@Override public boolean apply(Game game, Ability source) { Player player = game.getPlayer(source.getFirstTarget()); if (player != null) { FilterCreaturePermanent filter = new FilterCreaturePermanent(); filter.add(new ControllerIdPredicate(player.getId())); List<Permanent> creatures = game.getBattlefield().getActivePermanents(filter, source.getControllerId(), source.getSourceId(), game); for (Permanent creature : creatures) { creature.damage(1, source.getSourceId(), game, false, true); } return true; } return false;}
+58270:328[@Override public AggravateRequirementEffect copy() { return new AggravateRequirementEffect(this);}
+58350:328[@Override public boolean mustBlock(Game game) { return false;}
+58709:331[@Override public AmassTheComponentsEffect copy() { return new AmassTheComponentsEffect(this);}
+58722:331[@Override public boolean apply(Game game, Ability source) { Player player = game.getPlayer(source.getControllerId()); if (player == null) { return false; } player.drawCards(3, game); if (player.getHand().size() > 0) { FilterCard filter = new FilterCard("card from your hand to put on the bottom of your library"); TargetCard target = new TargetCard(Zone.HAND, filter); if (player.choose(Outcome.Detriment, player.getHand(), target, game)) { Card card = player.getHand().get(target.getFirstTarget(), game); if (card != null) { player.removeFromHand(card, game); card.moveToZone(Zone.LIBRARY, source.getSourceId(), game, false); } } } return true;}
+59201:333[@Override public AngelOfGlorysRiseEffect copy() { return new AngelOfGlorysRiseEffect(this);}
+59214:333[@Override public boolean apply(Game game, Ability source) { Player player = game.getPlayer(source.getControllerId()); if (player != null) { for (Permanent zombie : game.getBattlefield().getActivePermanents(filterZombie, source.getControllerId(), source.getSourceId(), game)) { zombie.moveToExile(source.getSourceId(), zombie.getName(), source.getSourceId(), game); } for (Card human : player.getGraveyard().getCards(filterHuman, game)) { human.putOntoBattlefield(game, Zone.GRAVEYARD, source.getSourceId(), source.getControllerId()); } } return true;}
+59520:334[@Override public AngelOfJubilationEffect copy() { return new AngelOfJubilationEffect(this);}
+59533:334[@Override public boolean apply(Game game, Ability source) { for (Player player : game.getPlayers().values()) { player.setCanPayLifeCost(false); player.setCanPaySacrificeCost(false); } return true;}
+59974:337[@Override public boolean applies(Ability abilityToModify, Ability source, Game game) { if (abilityToModify instanceof SpellAbility || abilityToModify instanceof FlashbackAbility) { Card sourceCard = game.getCard(((SpellAbility) abilityToModify).getSourceId()); if (sourceCard != null && (sourceCard.getCardType().contains(CardType.INSTANT) || sourceCard.getCardType().contains(CardType.SORCERY))) { return true; } } return false;}
+60049:337[@Override public ArcaneMeleeCostReductionEffect copy() { return new ArcaneMeleeCostReductionEffect(this);}
+61306:347[@Override public boolean apply(Game game, Ability source) { Player player = game.getPlayer(source.getFirstTarget()); if (player != null) { int damage = source.getManaCostsToPay().getX(); if (damage > 0) { player.damage(damage, source.getSourceId(), game, false, true); for (Permanent perm : game.getBattlefield().getAllActivePermanents(filter, player.getId(), game)) { perm.damage(damage, source.getSourceId(), game, false, true); } } return true; } return false;}
+61404:347[@Override public BonfireOfTheDamnedEffect copy() { return new BonfireOfTheDamnedEffect(this);}
+61542:348[@Override public BowerPassageEffect copy() { return new BowerPassageEffect(this);}
+61555:348[@Override public boolean canBlock(Permanent attacker, Permanent blocker, Ability source, Game game) { if (attacker != null && attacker.getControllerId().equals(source.getControllerId()) && blocker.getAbilities().contains(FlyingAbility.getInstance())) { return false; } return true;}
+61761:349[@Override public BrunaLightOfAlabasterEffect copy() { return new BrunaLightOfAlabasterEffect(this);}
+61774:349[@Override public boolean apply(Game game, Ability source) { UUID bruna = source.getSourceId(); Player player = game.getPlayer(source.getControllerId()); FilterPermanent filterAura = new FilterPermanent("Aura"); FilterCard filterAuraCard = new FilterCard("Aura card"); filterAura.add(new CardTypePredicate(CardType.ENCHANTMENT)); filterAura.add(new SubtypePredicate("Aura")); filterAura.add(new AuraPermanentCanAttachToPermanentId(bruna)); filterAuraCard.add(new CardTypePredicate(CardType.ENCHANTMENT)); filterAuraCard.add(new SubtypePredicate("Aura")); filterAuraCard.add(new AuraCardCanAttachToPermanentId(bruna)); if (player == null) { return false; } Permanent permanent = game.getPermanent(source.getSourceId()); if (permanent == null) { return false; } while (player.canRespond() && player.chooseUse(Outcome.Benefit, "Attach an Aura from the battlefield?", source, game)) { Target targetAura = new TargetPermanent(filterAura); if (player.choose(Outcome.Benefit, targetAura, source.getSourceId(), game)) { Permanent aura = game.getPermanent(targetAura.getFirstTarget()); if (aura != null) { Permanent attachedTo = game.getPermanent(aura.getAttachedTo()); if (attachedTo != null) { attachedTo.removeAttachment(aura.getId(), game); } permanent.addAttachment(aura.getId(), game); } } } int count = player.getHand().count(filterAuraCard, game); while (player.canRespond() && count > 0 && player.chooseUse(Outcome.Benefit, "Attach an Aura from your hand?", source, game)) { TargetCard targetAura = new TargetCard(Zone.HAND, filterAuraCard); if (player.choose(Outcome.Benefit, player.getHand(), targetAura, game)) { Card aura = game.getCard(targetAura.getFirstTarget()); if (aura != null) { game.getState().setValue("attachTo:" + aura.getId(), permanent); aura.putOntoBattlefield(game, Zone.HAND, source.getSourceId(), player.getId()); permanent.addAttachment(aura.getId(), game); } } count = player.getHand().count(filterAuraCard, game); } count = player.getGraveyard().count(filterAuraCard, game); while (player.canRespond() && count > 0 && player.chooseUse(Outcome.Benefit, "Attach an Aura from your graveyard?", source, game)) { TargetCard targetAura = new TargetCard(Zone.GRAVEYARD, filterAuraCard); if (player.choose(Outcome.Benefit, player.getGraveyard(), targetAura, game)) { Card aura = game.getCard(targetAura.getFirstTarget()); if (aura != null) { game.getState().setValue("attachTo:" + aura.getId(), permanent); aura.putOntoBattlefield(game, Zone.GRAVEYARD, source.getSourceId(), player.getId()); permanent.addAttachment(aura.getId(), game); } } count = player.getGraveyard().count(filterAuraCard, game); } return true;}
+62507:351[@Override public BurnAtTheStakeEffect copy() { return new BurnAtTheStakeEffect(this);}
+62520:351[@Override public boolean apply(Game game, Ability source) { int amount = (new GetXValue()).calculate(game, source, this) * 3; Permanent permanent = game.getPermanent(targetPointer.getFirst(game, source)); if (permanent != null) { permanent.damage(amount, source.getSourceId(), game, false, true); return true; } Player player = game.getPlayer(targetPointer.getFirst(game, source)); if (player != null) { player.damage(amount, source.getSourceId(), game, false, true); return true; } return false;}
+63773:357[@Override public CavernOfSoulsWatcher copy() { return new CavernOfSoulsWatcher(this);}
+63852:357[@Override public void reset() { super.reset(); spells.clear();}
+63900:357[@Override public CavernOfSoulsCantCounterEffect copy() { return new CavernOfSoulsCantCounterEffect(this);}
+64002:357[@Override public boolean applies(GameEvent event, Ability source, Game game) { CavernOfSoulsWatcher watcher = (CavernOfSoulsWatcher) game.getState().getWatchers().get("ManaPaidFromCavernOfSoulsWatcher", source.getSourceId()); Spell spell = game.getStack().getSpell(event.getTargetId()); return spell != null && watcher != null && watcher.spellCantBeCountered(spell.getId());}
+64267:358[@Override public boolean canBlock(Permanent attacker, Permanent blocker, Ability source, Game game) { if (attacker != null && blocker != null) { Permanent sourcePermanent = game.getPermanent(source.getSourceId()); if (sourcePermanent != null && attacker.getControllerId().equals(sourcePermanent.getControllerId())) { return blocker.getPower().getValue() >= sourcePermanent.getPower().getValue(); } } return true;}
+64341:358[@Override public ChampionOfLambholtEffect copy() { return new ChampionOfLambholtEffect(this);}
+65218:365[@Override public DangerousWagerEffect copy() { return new DangerousWagerEffect(this);}
+65231:365[@Override public boolean apply(Game game, Ability source) { Player player = game.getPlayer(source.getControllerId()); if (player != null) { for (Card card : player.getHand().getCards(game)) { player.discard(card, source, game); } return true; } return false;}
+65496:366[@Override public boolean apply(Game game, Ability source) { Permanent perm = game.getPermanent(source.getSourceId()); if (perm != null) { for (UUID imprintedId : perm.getImprinted()) { Card card = game.getCard(imprintedId); if (card != null) { for (Ability ability : card.getAbilities()) { if (ability instanceof ActivatedAbility) { perm.addAbility(ability, source.getSourceId(), game); } } } } } return true;}
+65587:366[@Override public DarkImpostorContinuousEffect copy() { return new DarkImpostorContinuousEffect(this);}
+66108:370[@Override public DefyDeathEffect copy() { return new DefyDeathEffect(this);}
+66121:370[@Override public boolean apply(Game game, Ability source) { Permanent permanent = game.getPermanent(source.getFirstTarget()); if (permanent != null && permanent.hasSubtype("Angel")) { permanent.addCounters(CounterType.P1P1.createInstance(2), game); return true; } return false;}
+66672:374[@Override public DescendantsPathEffect copy() { return new DescendantsPathEffect(this);}
+66685:374[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); MageObject sourceObject = source.getSourceObject(game); if (controller != null && sourceObject != null) { if (controller.getLibrary().size() > 0) { Card card = controller.getLibrary().getFromTop(game); if (card == null) { return false; } controller.revealCards(sourceObject.getIdName(), new CardsImpl(card), game); if (card.getCardType().contains(CardType.CREATURE)) { FilterControlledCreaturePermanent filter = new FilterControlledCreaturePermanent(); boolean found = false; for (Permanent permanent : game.getBattlefield().getAllActivePermanents(filter, controller.getId(), game)) { if (CardUtil.shareSubtypes(card, permanent)) { found = true; break; } } if (found) { game.informPlayers(sourceObject.getLogName() + ": Found a creature that shares a creature type with the revealed card."); if (controller.chooseUse(Outcome.Benefit, "Cast the card?", source, game)) { controller.cast(card.getSpellAbility(), game, true); } else { game.informPlayers(sourceObject.getLogName() + ": " + controller.getLogName() + " canceled casting the card."); controller.getLibrary().putOnBottom(card, game); } } else { game.informPlayers(sourceObject.getLogName() + ": No creature that shares a creature type with the revealed card."); controller.getLibrary().putOnBottom(card, game); } } else { game.informPlayers(sourceObject.getLogName() + ": Put " + card.getLogName() + " on the bottom."); controller.getLibrary().putOnBottom(card, game); } return true; } } return false;}
+67062:375[@Override public DescentIntoMadnessEffect copy() { return new DescentIntoMadnessEffect(this);}
+67401:375[private void selectCards(Player player, List<UUID> selectedObjects, int count, Ability source, Game game) { int amount = Math.min(count, player.getHand().size() + game.getBattlefield().getAllActivePermanents(player.getId()).size()); int cardsFromHand = 0; while (player.canRespond() && amount > 0) { Target target; do { FilterControlledPermanent filter = new FilterControlledPermanent(); filter.setMessage("permanent you control (" + amount + " left in total)"); List<PermanentIdPredicate> uuidPredicates = new ArrayList<>(); for (UUID uuid : selectedObjects) { uuidPredicates.add(new PermanentIdPredicate(uuid)); } filter.add(Predicates.not(Predicates.or(uuidPredicates))); target = new TargetControlledPermanent(0, 1, filter, true); if (target.canChoose(player.getId(), game) && player.choose(Outcome.Exile, target, source.getSourceId(), game)) { for (UUID targetId : target.getTargets()) { if (!selectedObjects.contains(targetId)) { Permanent chosen = game.getPermanent(targetId); if (chosen != null) { amount--; game.informPlayers(player.getLogName() + " selects " + chosen.getLogName() + " from battlefield"); selectedObjects.add(targetId); } } } } } while (amount > 0 && !target.getTargets().isEmpty() && player.canRespond()); if (amount > 0) { TargetCard targetInHand; do { FilterCard filterInHand = new FilterCard(); filterInHand.setMessage("card from your hand (" + amount + " left in total)"); targetInHand = new TargetCard(0, 1, Zone.HAND, filterInHand); List<CardIdPredicate> uuidPredicates = new ArrayList<>(); for (UUID uuid : selectedObjects) { uuidPredicates.add(new CardIdPredicate(uuid)); } filterInHand.add(Predicates.not(Predicates.or(uuidPredicates))); if (targetInHand.canChoose(player.getId(), game) && player.choose(Outcome.Exile, player.getHand(), targetInHand, game)) { Card card = player.getHand().get(targetInHand.getFirstTarget(), game); if (card != null) { selectedObjects.add(targetInHand.getFirstTarget()); amount--; cardsFromHand++; } } } while (amount > 0 && !targetInHand.getTargets().isEmpty() && player.canRespond()); } } if (cardsFromHand > 0) { game.informPlayers(player.getLogName() + " selects " + cardsFromHand + (cardsFromHand == 1 ? " card" : " cards") + " from his or her hand"); }}
+68052:377[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); if (controller != null) { Set<Card> cardsToHand = new LinkedHashSet<>(); for (Permanent permanent : game.getBattlefield().getActivePermanents(new FilterNonlandPermanent(), source.getControllerId(), source.getSourceId(), game)) { cardsToHand.add((Card) permanent); } controller.moveCards(cardsToHand, Zone.HAND, source, game); return true; } return false;}
+68142:377[@Override public DevastationTideEffect copy() { return new DevastationTideEffect(this);}
+68276:378[@Override public DivineDeflectionPreventDamageTargetEffect copy() { return new DivineDeflectionPreventDamageTargetEffect(this);}
+68452:378[@Override public boolean applies(GameEvent event, Ability source, Game game) { if (!this.used && super.applies(event, source, game)) { if (amountToPrevent == Integer.MIN_VALUE) { amountToPrevent = source.getManaCostsToPay().getX(); } Permanent permanent = game.getPermanent(event.getTargetId()); if (permanent != null) { if (permanent.getControllerId().equals(source.getControllerId())) { return true; } } if (source.getControllerId().equals(event.getTargetId())) { return true; } } return false;}
+68687:379[@Override public DreadSlaverEffect copy() { return new DreadSlaverEffect(this);}
+68700:379[@Override public boolean apply(Game game, Ability source) { Card card = game.getCard(targetPointer.getFirst(game, source)); if (card != null) { Zone currentZone = game.getState().getZone(card.getId()); if (card.putOntoBattlefield(game, currentZone, source.getSourceId(), source.getControllerId())) { ContinuousEffect effect = new DreadSlaverContiniousEffect(); effect.setTargetPointer(new FixedTarget(card.getId())); game.addEffect(effect, source); return true; } } return false;}
+68829:379[@Override public DreadSlaverContiniousEffect copy() { return new DreadSlaverContiniousEffect(this);}
+68959:379[@Override public boolean hasLayer(Layer layer) { return layer == Layer.ColorChangingEffects_5 || layer == Layer.TypeChangingEffects_4;}
+69817:385[@Override public EatenBySpidersEffect copy() { return new EatenBySpidersEffect(this);}
+69830:385[@Override public boolean apply(Game game, Ability source) { Permanent permanent = game.getPermanent(source.getFirstTarget()); if (permanent != null) { LinkedList<UUID> attachments = new LinkedList<UUID>(); attachments.addAll(permanent.getAttachments()); for (UUID attachmentId : attachments) { Permanent attachment = game.getPermanent(attachmentId); if (attachment.hasSubtype("Equipment")) { attachment.destroy(source.getSourceId(), game, false); } } permanent.destroy(source.getSourceId(), game, false); return true; } return false;}
+70378:389[@Override public EssenceHarvestEffect copy() { return new EssenceHarvestEffect(this);}
+70391:389[@Override public boolean apply(Game game, Ability source) { Player player = game.getPlayer(source.getControllerId()); Player targetPlayer = game.getPlayer(source.getFirstTarget()); if (player != null && targetPlayer != null) { List<Permanent> creatures = game.getBattlefield().getAllActivePermanents(new FilterCreaturePermanent(), player.getId(), game); int amount = 0; for (Permanent creature : creatures) { int power = creature.getPower().getValue(); if (amount < power) { amount = power; } } if (amount > 0) { targetPlayer.loseLife(amount, game); player.gainLife(amount, game); } return true; } return false;}
+70745:391[@Override public ExquisiteBloodTriggeredAbility copy() { return new ExquisiteBloodTriggeredAbility(this);}
+70833:391[@Override public String getRule() { return "Whenever an opponent loses life, you gain that much life.";}
+71515:396[@Override public GallowsAtWillowHillEffect copy() { return new GallowsAtWillowHillEffect(this);}
+71528:396[@Override public boolean apply(Game game, Ability source) { int affectedTargets = 0; if (targetPointer.getTargets(game, source).size() > 0) { for (UUID permanentId : targetPointer.getTargets(game, source)) { Permanent permanent = game.getPermanent(permanentId); if (permanent != null) { Player controller = game.getPlayer(permanent.getControllerId()); permanent.destroy(source.getSourceId(), game, false); if (controller != null) { new CreateTokenEffect(new SpiritWhiteToken()).apply(game, source); } affectedTargets++; } } } return affectedTargets > 0;}
+72038:399[@Override public GeistSnatchCounterTargetEffect copy() { return new GeistSnatchCounterTargetEffect(this);}
+72051:399[@Override public boolean apply(Game game, Ability source) { game.getStack().counter(source.getFirstTarget(), source.getSourceId(), game); Token token = new SpiritBlueToken(); token.putOntoBattlefield(1, game, source.getSourceId(), source.getControllerId()); return true;}
+72529:402[@Override public GhostlyFlickerEffect copy() { return new GhostlyFlickerEffect(this);}
+72542:402[@Override public boolean apply(Game game, Ability source) { UUID exileId = source.getSourceId(); for (UUID permanentId : targetPointer.getTargets(game, source)) { Permanent target = game.getPermanent(permanentId); if (target != null) { target.moveToExile(exileId, "Ghostly Flicker", source.getSourceId(), game); Card card = game.getCard(target.getId()); if (card != null) { Zone currentZone = game.getState().getZone(card.getId()); card.putOntoBattlefield(game, currentZone, source.getSourceId(), source.getControllerId()); } } } return true;}
+73148:405[@Override public GiselaBladeOfGoldnightDoubleDamageEffect copy() { return new GiselaBladeOfGoldnightDoubleDamageEffect(this);}
+73342:405[@Override public boolean replaceEvent(GameEvent event, Ability source, Game game) { switch(event.getType()) { case DAMAGE_PLAYER: if (event.getTargetId().equals(source.getControllerId())) { preventDamage(event, source, source.getControllerId(), game); } else if (game.getOpponents(source.getControllerId()).contains(event.getTargetId())) { event.setAmount(event.getAmount() * 2); } break; case DAMAGE_CREATURE: case DAMAGE_PLANESWALKER: Permanent permanent = game.getPermanent(event.getTargetId()); if (permanent != null) { if (permanent.getControllerId().equals(source.getControllerId())) { preventDamage(event, source, permanent.getId(), game); } else if (game.getOpponents(source.getControllerId()).contains(permanent.getControllerId())) { event.setAmount(event.getAmount() * 2); } } } return false;}
+73778:406[@Override public boolean applies(GameEvent event, Ability source, Game game) { if (event.getTargetId().equals(source.getSourceId())) { DamageCreatureEvent damageEvent = (DamageCreatureEvent) event; if (damageEvent.isCombatDamage()) { return true; } } return false;}
+73827:406[@Override public GloomSurgeonEffect copy() { return new GloomSurgeonEffect(this);}
+74339:410[@Override public GraveExchangeEffect copy() { return new GraveExchangeEffect(this);}
+74352:410[@Override public boolean apply(Game game, Ability source) { Player player = game.getPlayer(source.getTargets().get(1).getFirstTarget()); if (player == null) { return false; } Target target = new TargetControlledPermanent(new FilterControlledCreaturePermanent()); if (target.canChoose(player.getId(), game) && player.choose(Outcome.Sacrifice, target, source.getSourceId(), game)) { Permanent permanent = game.getPermanent(target.getFirstTarget()); if (permanent != null) { return permanent.sacrifice(source.getSourceId(), game); } } return false;}
+75325:416[@Override public String getRule() { return "Whenever {this} attacks, return another creature you control to its owner's hand.";}
+75335:416[@Override public HavengulSkaabAbility copy() { return new HavengulSkaabAbility(this);}
+75826:419[@Override public boolean applies(Ability abilityToModify, Ability source, Game game) { if (abilityToModify instanceof SpellAbility || abilityToModify instanceof FlashbackAbility) { Card sourceCard = game.getCard(abilityToModify.getSourceId()); if (sourceCard != null && abilityToModify.getControllerId().equals(source.getControllerId()) && (sourceCard.hasSubtype("Angel") || sourceCard.hasSubtype("Human"))) { return true; } } return false;}
+75900:419[@Override public HeraldOfWarCostReductionEffect copy() { return new HeraldOfWarCostReductionEffect(this);}
+76077:420[@Override public boolean apply(Game game, Ability source) { Permanent creature = game.getPermanent(source.getFirstTarget()); if (creature != null) { if (creature.hasSubtype("Zombie")) { creature.tap(game); creature.moveToExile(source.getSourceId(), creature.getName(), source.getSourceId(), game); } else { creature.tap(game); } return true; } return false;}
+76152:420[@Override public HolyJusticiarEffect copy() { return new HolyJusticiarEffect(this);}
+76928:426[@Override public InfiniteReflectionTriggeredEffect copy() { return new InfiniteReflectionTriggeredEffect(this);}
+76941:426[@Override public boolean apply(Game game, Ability source) { Permanent sourcePermanent = game.getPermanent(source.getSourceId()); if (sourcePermanent != null && sourcePermanent.getAttachedTo() != null) { Permanent toCopyFromPermanent = game.getPermanent(sourcePermanent.getAttachedTo()); if (toCopyFromPermanent != null) { for (Permanent toCopyToPermanent : game.getBattlefield().getAllActivePermanents(filter, source.getControllerId(), game)) { if (!toCopyToPermanent.equals(toCopyFromPermanent) && !(toCopyToPermanent instanceof PermanentToken)) { game.copyPermanent(toCopyFromPermanent, toCopyToPermanent.getId(), source, new EmptyApplyToPermanent()); } } return true; } } return false;}
+77269:426[@Override public InfiniteReflectionEntersBattlefieldEffect copy() { return new InfiniteReflectionEntersBattlefieldEffect(this);}
+77255:426[@Override public String getText(Mode mode) { return "Nontoken creatures you control enter the battlefield as a copy of enchanted creature";}
+77542:428[@Override public JointAssaultBoostTargetEffect copy() { return new JointAssaultBoostTargetEffect(this);}
+77622:428[@Override public boolean apply(Game game, Ability source) { int affectedTargets = 0; UUID permanentId = targetPointer.getFirst(game, source); Permanent target = game.getPermanent(permanentId); if (target != null) { target.addPower(power); target.addToughness(toughness); affectedTargets++; } if (this.paired != null) { Permanent paired = game.getPermanent(this.paired); if (paired != null) { paired.addPower(power); paired.addToughness(toughness); affectedTargets++; } } return affectedTargets > 0;}
+77984:430[@Override public KillingWaveEffect copy() { return new KillingWaveEffect(this);}
+77997:430[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); if (controller == null) { return false; } int amount = (new ManacostVariableValue()).calculate(game, source, this); if (amount > 0) { LinkedList<Permanent> sacrifices = new LinkedList<Permanent>(); HashMap<UUID, Integer> lifePaidAmounts = new HashMap<UUID, Integer>(); FilterCreaturePermanent filter = new FilterCreaturePermanent(); for (UUID playerId : game.getState().getPlayersInRange(controller.getId(), game)) { Player player = game.getPlayer(playerId); List<Permanent> creatures = game.getBattlefield().getAllActivePermanents(filter, playerId, game); int lifePaid = 0; int playerLife = player.getLife(); for (Permanent creature : creatures) { String message = "Pay " + amount + " life? If you don't, " + creature.getName() + " will be sacrificed."; if (playerLife - amount - lifePaid >= 0 && player != null && player.chooseUse(Outcome.Neutral, message, source, game)) { game.informPlayers(player.getLogName() + " pays " + amount + " life. He will not sacrifice " + creature.getName()); lifePaid += amount; } else { game.informPlayers(player.getLogName() + " will sacrifice " + creature.getName()); sacrifices.add(creature); } } lifePaidAmounts.put(playerId, lifePaid); } for (UUID playerId : game.getState().getPlayersInRange(controller.getId(), game)) { int lifePaid = lifePaidAmounts.get(playerId); if (lifePaid > 0) { Player player = game.getPlayer(playerId); if (player != null) { player.loseLife(lifePaid, game); } } } for (Permanent creature : sacrifices) { creature.sacrifice(source.getSourceId(), game); } } return true;}
+79052:435[@Override public LoneRevenantTriggeredAbility copy() { return new LoneRevenantTriggeredAbility(this);}
+79172:435[@Override public String getRule() { return "Whenever {this} deals combat damage to a player, if you control no other creatures, " + super.getRule();}
+80037:440[@Override public MalignusEffect copy() { return new MalignusEffect(this);}
+80075:440[@Override public boolean applies(GameEvent event, Ability source, Game game) { return event.getSourceId().equals(source.getSourceId());}
+80832:446[@Override public MisthollowGriffinPlayEffect copy() { return new MisthollowGriffinPlayEffect(this);}
+80845:446[@Override public boolean applies(UUID sourceId, Ability source, UUID affectedControllerId, Game game) { if (sourceId.equals(source.getSourceId())) { Card card = game.getCard(source.getSourceId()); if (card != null && card.getOwnerId().equals(source.getControllerId()) && game.getState().getZone(source.getSourceId()) == Zone.EXILED) { return true; } } return false;}
+82131:456[@Override public OtherworldAtlasDrawEffect copy() { return new OtherworldAtlasDrawEffect(this);}
+82144:456[@Override public boolean apply(Game game, Ability source) { Player sourcePlayer = game.getPlayer(source.getControllerId()); Permanent permanent = game.getPermanent(source.getSourceId()); if (permanent != null) { int amount = permanent.getCounters().getCount(CounterType.CHARGE); if (amount > 0) { for (UUID playerId : game.getState().getPlayersInRange(sourcePlayer.getId(), game)) { Player player = game.getPlayer(playerId); if (player != null) { player.drawCards(amount, game); } } } } return true;}
+82712:457[@Override private boolean targetsPlayer(UUID id, Game game) { StackObject spell = game.getStack().getStackObject(id); if (spell != null) { Ability ability = spell.getStackAbility(); if (ability != null && !ability.getTargets().isEmpty()) { for (Target target : ability.getTargets()) { for (UUID playerId : target.getTargets()) { Player player = game.getPlayer(playerId); if (player != null) { return true; } } } } } return false;}
+82808:457[@Override public CustomTargetSpell copy() { return new CustomTargetSpell(this);}
+83090:459[@Override public PeelFromRealityEffect copy() { return new PeelFromRealityEffect(this);}
+83103:459[@Override public boolean apply(Game game, Ability source) { boolean result = false; Permanent permanent = game.getPermanent(source.getFirstTarget()); if (permanent != null) { result |= permanent.moveToZone(Zone.HAND, source.getSourceId(), game, false); } permanent = game.getPermanent(source.getTargets().get(1).getFirstTarget()); if (permanent != null) { result |= permanent.moveToZone(Zone.HAND, source.getSourceId(), game, false); } return result;}
+83710:463[@Override public PrimalSurgeEffect copy() { return new PrimalSurgeEffect(this);}
+83723:463[@Override public boolean apply(Game game, Ability source) { Player player = game.getPlayer(source.getControllerId()); if (player == null) { return false; } boolean repeat; do { repeat = false; if (player.getLibrary().size() > 0) { Card card = player.getLibrary().removeFromTop(game); if (card != null) { card.moveToExile(null, "", source.getSourceId(), game); List<CardType> cardType = card.getCardType(); if ((cardType.contains(CardType.ARTIFACT) || cardType.contains(CardType.CREATURE) || cardType.contains(CardType.ENCHANTMENT) || cardType.contains(CardType.LAND) || cardType.contains(CardType.PLANESWALKER)) && player.chooseUse(Outcome.PutCardInPlay, "Put " + card.getName() + " onto the battlefield?", source, game)) { card.moveToZone(Zone.BATTLEFIELD, source.getSourceId(), game, false); Permanent permanent = game.getPermanent(card.getId()); if (permanent == null) { permanent = (Permanent) game.getLastKnownInformation(card.getId(), Zone.BATTLEFIELD); } if (permanent != null) { repeat = true; } } } } } while (player.canRespond() && repeat); return true;}
+84611:468[@Override public RidersOfGavonyGainAbilityControlledEffect copy() { return new RidersOfGavonyGainAbilityControlledEffect(this);}
+84624:468[@Override public boolean apply(Game game, Ability source) { if (protectionFilter == null) { Permanent permanent = game.getPermanent(source.getSourceId()); if (permanent != null) { String subtype = (String) game.getState().getValue(permanent.getId() + "_type"); if (subtype != null) { protectionFilter = new FilterPermanent(subtype + "s"); protectionFilter.add(new SubtypePredicate(subtype)); } } } if (protectionFilter != null) { for (Permanent perm : game.getBattlefield().getAllActivePermanents(filter, source.getControllerId(), game)) { perm.addAbility(new ProtectionAbility(protectionFilter), source.getSourceId(), game); } return true; } return false;}
+85071:471[@Override public RiteOfRuinEffect copy() { return new RiteOfRuinEffect(this);}
+85412:471[private CardType getCardType(String type) { if ("Artifacts".equals(type)) { return CardType.ARTIFACT; } if ("Creatures".equals(type)) { return CardType.CREATURE; } if ("Lands".equals(type)) { return CardType.LAND; } return null;}
+86813:482[@Override public ShelteringWordEffect copy() { return new ShelteringWordEffect(this);}
+86826:482[@Override public boolean apply(Game game, Ability source) { Player player = game.getPlayer(source.getControllerId()); Permanent permanent = game.getPermanent(source.getFirstTarget()); if (player != null && permanent != null) { int amount = permanent.getToughness().getValue(); if (amount > 0) { player.gainLife(amount, game); return true; } } return false;}
+87063:483[@Override public SigardaHostOfHeronsEffect copy() { return new SigardaHostOfHeronsEffect(this);}
+87101:483[@Override public boolean applies(GameEvent event, Ability source, Game game) { if (event.getPlayerId().equals(source.getControllerId())) { MageObject object = game.getObject(event.getSourceId()); if (object instanceof PermanentCard) { if (game.getOpponents(source.getControllerId()).contains(((PermanentCard) object).getControllerId())) { return true; } } if (object instanceof Spell) { if (game.getOpponents(source.getControllerId()).contains(((Spell) object).getControllerId())) { return true; } } } return false;}
+88115:490[@Override public SpectralPrisonAbility copy() { return new SpectralPrisonAbility(this);}
+88228:490[@Override public String getRule() { return "When enchanted creature becomes the target of a spell or ability, destroy {this}.";}
+88673:493[@Override public StolenGoodsEffect copy() { return new StolenGoodsEffect(this);}
+88686:493[@Override public boolean apply(Game game, Ability source) { Player opponent = game.getPlayer(targetPointer.getFirst(game, source)); MageObject sourceObject = source.getSourceObject(game); if (opponent != null && opponent.getLibrary().size() > 0 && sourceObject != null) { Library library = opponent.getLibrary(); Card card; do { card = library.removeFromTop(game); if (card != null) { opponent.moveCardsToExile(card, source, game, true, source.getSourceId(), sourceObject.getIdName()); } } while (library.size() > 0 && card != null && card.getCardType().contains(CardType.LAND)); if (card != null) { ContinuousEffect effect = new StolenGoodsCastFromExileEffect(); effect.setTargetPointer(new FixedTarget(card.getId(), card.getZoneChangeCounter(game))); game.addEffect(effect, source); } return true; } return false;}
+88905:493[@Override public StolenGoodsCastFromExileEffect copy() { return new StolenGoodsCastFromExileEffect(this);}
+88918:493[@Override public boolean applies(UUID sourceId, Ability source, UUID affectedControllerId, Game game) { if (sourceId != null && sourceId.equals(getTargetPointer().getFirst(game, source)) && affectedControllerId.equals(source.getControllerId())) { Card card = game.getCard(sourceId); if (card != null && game.getState().getZone(sourceId) == Zone.EXILED) { Player player = game.getPlayer(affectedControllerId); player.setCastSourceIdWithAlternateMana(sourceId, null, null); return true; } } return false;}
+89848:498[@Override public TerminusEffect copy() { return new TerminusEffect(this);}
+89861:498[@Override public boolean apply(Game game, Ability source) { List<Permanent> permanents = game.getBattlefield().getActivePermanents(new FilterCreaturePermanent(), source.getControllerId(), source.getSourceId(), game); for (Permanent permanent : permanents) { permanent.moveToZone(Zone.LIBRARY, source.getSourceId(), game, false); } return true;}
+90039:499[@Override public TerrifyingPresenceEffect copy() { return new TerrifyingPresenceEffect(this);}
+90052:499[@Override public boolean applies(GameEvent event, Ability source, Game game) { return super.applies(event, source, game) && !event.getSourceId().equals(getTargetPointer().getFirst(game, source));}
+90196:500[@Override public ThatcherRevoltEffect copy() { return new ThatcherRevoltEffect(this);}
+90209:500[@Override public boolean apply(Game game, Ability source) { RedHumanToken token = new RedHumanToken(); token.putOntoBattlefield(3, game, source.getSourceId(), source.getControllerId()); ArrayList<Permanent> toSacrifice = new ArrayList<>(); for (UUID tokenId : token.getLastAddedTokenIds()) { Permanent tokenPermanent = game.getPermanent(tokenId); if (tokenPermanent != null) { toSacrifice.add(tokenPermanent); } } SacrificeTargetEffect sacrificeEffect = new SacrificeTargetEffect(); sacrificeEffect.setTargetPointer(new FixedTargets(toSacrifice, game)); game.addDelayedTriggeredAbility(new AtTheBeginOfNextEndStepDelayedTriggeredAbility(sacrificeEffect), source); return true;}
+91069:505[@Override public TreacherousPitDwellerTriggeredAbility copy() { return new TreacherousPitDwellerTriggeredAbility(this);}
+91082:505[@Override public String getRule() { return ruleText + super.getRule();}
+91134:505[@Override public TreacherousPitDwellerEffect copy() { return new TreacherousPitDwellerEffect(this);}
+91147:505[@Override public boolean apply(Game game, Ability source) { Permanent permanent = (Permanent) source.getSourceObjectIfItStillExists(game); Player targetOpponent = game.getPlayer(source.getFirstTarget()); if (permanent != null && targetOpponent != null) { return permanent.changeControllerId(targetOpponent.getId(), game); } else { discard(); } return false;}
+91698:509[@Override public TyrantOfDiscordEffect copy() { return new TyrantOfDiscordEffect(this);}
+91711:509[@Override public boolean apply(Game game, Ability source) { UUID target = source.getFirstTarget(); Player opponent = game.getPlayer(target); if (opponent != null) { boolean stop = false; while (!stop) { int count = game.getBattlefield().countAll(new FilterPermanent(), opponent.getId(), game); if (count > 0) { int random = (int) (Math.random() * count); int index = 0; for (Permanent permanent : game.getBattlefield().getAllActivePermanents(opponent.getId())) { if (index == random) { if (permanent.sacrifice(source.getSourceId(), game)) { if (permanent.getCardType().contains(CardType.LAND)) { stop = true; game.informPlayers("Land permanent has been sacrificed: " + permanent.getName() + ". Stopping process."); } else { game.informPlayers("Nonland permanent has been sacrificed: " + permanent.getName() + ". Repeating process."); } } else { game.informPlayers("Couldn't sacrifice a permanent. Stopping the process."); stop = true; } break; } index++; } } else { game.informPlayers("There is no permanent to sacrifice"); stop = true; } } } return true;}
+92078:510[@Override public boolean canTarget(UUID controllerId, UUID id, Ability source, Game game) { if (source.getTargets().get(0).getTargets().contains(id)) { return false; } return super.canTarget(controllerId, id, source, game);}
+92126:510[@Override public TargetOtherCreaturePermanent copy() { return new TargetOtherCreaturePermanent(this);}
+92640:514[@Override public VanguardsShieldEffect copy() { return new VanguardsShieldEffect(this);}
+92764:514[@Override public boolean hasLayer(Layer layer) { return layer == Layer.RulesEffects;}
+93104:517[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); Permanent permanent = game.getPermanent(source.getSourceId()); if (controller != null && permanent != null) { for (UUID opponentUuid : game.getOpponents(source.getControllerId())) { Player opponent = game.getPlayer(opponentUuid); if (opponent != null && opponent.chooseUse(Outcome.LoseLife, "Make " + permanent.getLogName() + " deal 4 damage to you?", source, game)) { game.informPlayers(opponent.getLogName() + " has chosen to receive 4 damage from " + permanent.getLogName()); opponent.damage(4, permanent.getId(), game, false, true); permanent.sacrifice(source.getSourceId(), game); return true; } } game.informPlayers("4 damage wasn't dealt so " + permanent.getLogName() + " won't be sacrificed."); return true; } return false;}
+93257:517[@Override public VexingDevilEffect copy() { return new VexingDevilEffect(this);}
+94863:529[@Override public String getRule() { return "<i>Landfall</i> &mdash; Whenever a land enters the battlefield under your control, " + super.getRule();}
+94877:529[@Override public AkoumFirebirdLandfallAbility copy() { return new AkoumFirebirdLandfallAbility(this);}
+95043:530[@Override public AkoumHellkiteTriggeredAbility copy() { return new AkoumHellkiteTriggeredAbility(this);}
+95180:530[@Override public String getRule() { return text;}
+95215:530[@Override public AkoumHellkiteDamageEffect copy() { return new AkoumHellkiteDamageEffect(this);}
+95228:530[@Override public boolean apply(Game game, Ability source) { Permanent land = game.getPermanentOrLKIBattlefield(getTargetPointer().getFirst(game, source)); Player player = game.getPlayer(source.getFirstTarget()); if (land != null && player != null) { if (land.hasSubtype("Mountain")) { player.damage(2, source.getSourceId(), game, false, true); } else { player.damage(1, source.getSourceId(), game, false, true); } return true; } Permanent permanent = game.getPermanent(source.getFirstTarget()); if (land != null && permanent != null) { if (land.hasSubtype("Mountain")) { permanent.damage(2, source.getSourceId(), game, false, true); } else { permanent.damage(1, source.getSourceId(), game, false, true); } return true; } return false;}
+95526:531[@Override public AkoumStonewakerEffect copy() { return new AkoumStonewakerEffect(this);}
+95539:531[@Override public boolean apply(Game game, Ability source) { Token token = new AkoumStonewakerElementalToken(); if (token.putOntoBattlefield(1, game, source.getSourceId(), source.getControllerId())) { for (UUID tokenId : token.getLastAddedTokenIds()) { Permanent tokenPermanent = game.getPermanent(tokenId); if (tokenPermanent != null) { ExileTargetEffect exileEffect = new ExileTargetEffect(); exileEffect.setTargetPointer(new FixedTarget(tokenPermanent, game)); game.addDelayedTriggeredAbility(new AtTheBeginOfNextEndStepDelayedTriggeredAbility(exileEffect), source); } } return true; } return false;}
+95843:532[@Override public AlignedHedronNetworkExileEffect copy() { return new AlignedHedronNetworkExileEffect(this);}
+95856:532[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); Permanent permanent = game.getPermanent(source.getSourceId()); if (controller != null && permanent != null) { Set<Card> toExile = new LinkedHashSet<>(); for (Permanent creature : game.getBattlefield().getActivePermanents(filter, controller.getId(), source.getSourceId(), game)) { toExile.add(creature); } if (!toExile.isEmpty()) { controller.moveCardsToExile(toExile, source, game, true, CardUtil.getCardExileZoneId(game, source), permanent.getIdName()); new CreateDelayedTriggeredAbilityEffect(new OnLeaveReturnExiledToBattlefieldAbility()).apply(game, source); } return true; } return false;}
+96711:537[@Override public BaneOfBalaGedEffect copy() { return new BaneOfBalaGedEffect(this);}
+96724:537[@Override public boolean apply(Game game, Ability source) { Player defendingPlayer = game.getPlayer(getTargetPointer().getFirst(game, source)); if (defendingPlayer != null) { Target target = new TargetControlledPermanent(2); defendingPlayer.chooseTarget(outcome, target, source, game); defendingPlayer.moveCards(new CardsImpl(target.getTargets()), null, Zone.EXILED, source, game); return true; } return false;}
+97860:545[@Override public BlightHerderEffect copy() { return new BlightHerderEffect(this);}
+97873:545[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); if (controller != null) { Target target = new TargetCardInExile(2, 2, filter, null); if (target.canChoose(source.getSourceId(), source.getControllerId(), game)) { if (controller.chooseTarget(outcome, target, source, game)) { Cards cardsToGraveyard = new CardsImpl(target.getTargets()); controller.moveCards(cardsToGraveyard, null, Zone.GRAVEYARD, source, game); return new CreateTokenEffect(new EldraziScionToken(), 3).apply(game, source); } } return true; } return false;}
+98674:551[@Override public BringToLightEffect copy() { return new BringToLightEffect(this);}
+98687:551[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); if (controller != null) { int numberColors = ColorsOfManaSpentToCastCount.getInstance().calculate(game, source, this); FilterCard filter = new FilterCard(); filter.add(Predicates.or(new CardTypePredicate(CardType.CREATURE), new CardTypePredicate(CardType.INSTANT), new CardTypePredicate(CardType.SORCERY))); filter.add(new ConvertedManaCostPredicate(Filter.ComparisonType.LessThan, numberColors + 1)); TargetCardInLibrary target = new TargetCardInLibrary(filter); controller.searchLibrary(target, game); Card card = controller.getLibrary().getCard(target.getFirstTarget(), game); if (card != null) { controller.moveCards(card, Zone.EXILED, source, game); } controller.shuffleLibrary(game); if (card != null) { if (controller.chooseUse(outcome, "Cast " + card.getName() + " without paying its mana cost?", source, game)) { if (card.getSpellAbility() != null) { controller.cast(card.getSpellAbility(), game, true); } else { Logger.getLogger(BringToLightEffect.class).error("Bring to Light: spellAbility == null " + card.getName()); } } } return true; } return false;}
+100996:565[@Override public ConduitOfRuinWatcher copy() { return new ConduitOfRuinWatcher(this);}
+101009:565[@Override public void reset() { super.reset(); playerCreatureSpells.clear();}
+102141:573[@Override public DefiantBloodlordTriggeredAbility copy() { return new DefiantBloodlordTriggeredAbility(this);}
+102225:573[@Override public String getRule() { return "Whenever you gain life, target opponent loses that much life.";}
+102513:575[@Override public DesolationTwinOnCastAbility copy() { return new DesolationTwinOnCastAbility(this);}
+102526:575[@Override public String getRule() { return "When you cast {this}, " + super.getRule();}
+103617:582[@Override public EmeriaShepherdReturnToHandTargetEffect copy() { return new EmeriaShepherdReturnToHandTargetEffect(this);}
+103630:582[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); Permanent triggeringLand = ((LandfallAbility) source).getTriggeringPermanent(); if (controller == null || triggeringLand == null) { return false; } Zone toZone = Zone.HAND; if (triggeringLand.getSubtype().contains("Plains") && controller.chooseUse(Outcome.PutCardInPlay, "Put the card to battlefield instead?", source, game)) { toZone = Zone.BATTLEFIELD; } return controller.moveCards(new CardsImpl(targetPointer.getTargets(game, source)), toZone, source, game);}
+103861:583[@Override public EncirclingFissurePreventEffect copy() { return new EncirclingFissurePreventEffect(this);}
+103874:583[@Override public boolean applies(GameEvent event, Ability source, Game game) { if (super.applies(event, source, game) && event instanceof DamageEvent && event.getAmount() > 0) { DamageEvent damageEvent = (DamageEvent) event; if (damageEvent.isCombatDamage()) { Permanent permanent = game.getPermanent(damageEvent.getSourceId()); if (permanent != null && permanent.getCardType().contains(CardType.CREATURE) && permanent.getControllerId().equals(getTargetPointer().getFirst(game, source))) { return true; } } } return false;}
+104198:585[@Override public ExertInfluenceEffect copy() { return new ExertInfluenceEffect(this);}
+104211:585[@Override public boolean apply(Game game, Ability source) { MageObject sourceObject = game.getObject(source.getSourceId()); Player controller = game.getPlayer(source.getControllerId()); Permanent targetCreature = game.getPermanent(getTargetPointer().getFirst(game, source)); if (controller != null && sourceObject != null) { int colors = new ColorsOfManaSpentToCastCount().calculate(game, source, this); if (targetCreature.getPower().getValue() <= colors) { game.addEffect(new GainControlTargetEffect(Duration.Custom, true), source); } return true; } return false;}
+104755:588[@Override public FathomFeederEffect copy() { return new FathomFeederEffect(this);}
+104768:588[@Override public boolean apply(Game game, Ability source) { for (UUID opponentId : game.getOpponents(source.getControllerId())) { Player player = game.getPlayer(opponentId); if (player != null) { Card card = player.getLibrary().getFromTop(game); if (card != null) { player.moveCards(card, Zone.LIBRARY, Zone.EXILED, source, game); } } } return true;}
+105095:590[@Override public FertileThicketEffect copy() { return new FertileThicketEffect(this);}
+105108:590[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); MageObject sourceObject = game.getObject(source.getSourceId()); if (controller != null && sourceObject != null) { Cards cards = new CardsImpl(); cards.addAll(controller.getLibrary().getTopCards(game, 5)); controller.lookAtCards(sourceObject.getIdName(), cards, game); TargetCard target = new TargetCard(0, 1, Zone.LIBRARY, new FilterBasicLandCard()); controller.chooseTarget(outcome, cards, target, source, game); Cards cardsRevealed = new CardsImpl(target.getTargets()); if (!cardsRevealed.isEmpty()) { controller.revealCards(sourceObject.getIdName(), cardsRevealed, game); cards.removeAll(cardsRevealed); controller.putCardsOnTopOfLibrary(cardsRevealed, game, source, true); } controller.putCardsOnBottomOfLibrary(cards, game, source, true); return true; } return false;}
+106327:597[@Override public GreenwardenOfMurasaEffect copy() { return new GreenwardenOfMurasaEffect(this);}
+106340:597[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); MageObject sourceObject = game.getObject(source.getSourceId()); Card targetCard = game.getCard(getTargetPointer().getFirst(game, source)); if (controller != null && sourceObject != null && targetCard != null) { if (controller.chooseUse(outcome, "Exile " + sourceObject.getLogName() + " to return card from your graveyard to your hand?", source, game)) { Effect effect = new ReturnToHandTargetEffect(); effect.setTargetPointer(new FixedTarget(targetCard.getId(), targetCard.getZoneChangeCounter(game))); new ExileSourceEffect().apply(game, source); return effect.apply(game, source); } return true; } return false;}
+106876:600[@Override public GrovetenderDruidsEffect copy() { return new GrovetenderDruidsEffect(this);}
+106889:600[@Override public boolean apply(Game game, Ability source) { Player player = game.getPlayer(source.getControllerId()); if (player != null) { if (player.chooseUse(Outcome.BoostCreature, "Do you want to to pay {1}?", source, game)) { Cost cost = new ManaCostsImpl("{1}"); if (cost.pay(source, game, source.getSourceId(), source.getControllerId(), false, null)) { new CreateTokenEffect(new GrovetenderDruidsPlantToken()).apply(game, source); } return true; } } return false;}
+107354:602[@Override public GuardianOfTazeemTriggeredAbility copy() { return new GuardianOfTazeemTriggeredAbility(this);}
+107475:602[@Override public String getRule() { return "<i>Landfall</i> - Whenever a land enters the battlefield under your control, " + super.getRule();}
+107520:602[@Override public GuardianOfTazeemEffect copy() { return new GuardianOfTazeemEffect(this);}
+107533:602[@Override public boolean apply(Game game, Ability source) { Permanent land = game.getPermanentOrLKIBattlefield(getTargetPointer().getFirst(game, source)); Permanent targetCreature = game.getPermanent(source.getFirstTarget()); if (land != null && targetCreature != null) { if (land.hasSubtype("Island")) { ContinuousEffect effect = new DontUntapInControllersNextUntapStepTargetEffect("that creature"); effect.setTargetPointer(new FixedTarget(targetCreature, game)); game.addEffect(effect, source); } } return true;}
+107770:603[@Override public GuulDrazOverseerEffect copy() { return new GuulDrazOverseerEffect(this);}
+107783:603[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); Permanent land = game.getPermanentOrLKIBattlefield(getTargetPointer().getFirst(game, source)); if (controller != null && land != null) { int boost = 1; if (land.getSubtype().contains("Swamp")) { boost = 2; } game.addEffect(new BoostControlledEffect(boost, 0, Duration.EndOfTurn, true), source); return true; } return false;}
+108502:607[@Override public HedronBladeTriggeredAbility copy() { return new HedronBladeTriggeredAbility(this);}
+108670:607[@Override public String getRule() { return "Whenever equipped creature becomes blocked by one or more colorless creatures, " + super.getRule();}
+109716:614[@Override public KioraUntapEffect copy() { return new KioraUntapEffect(this);}
+109729:614[@Override public boolean apply(Game game, Ability source) { Permanent firstTarget = game.getPermanent(source.getTargets().get(0).getFirstTarget()); Permanent secondTarget = game.getPermanent(source.getTargets().get(1).getFirstTarget()); if (firstTarget != null) { firstTarget.untap(game); } if (secondTarget != null) { return secondTarget.untap(game); } return true;}
+109839:614[@Override public KioraRevealEffect copy() { return new KioraRevealEffect(this);}
+109852:614[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); MageObject sourceObject = game.getObject(source.getSourceId()); if (sourceObject != null && controller != null) { Cards cards = new CardsImpl(); cards.addAll(controller.getLibrary().getTopCards(game, 4)); boolean creatureCardFound = false; boolean landCardFound = false; for (UUID cardId : cards) { Card card = game.getCard(cardId); if (card != null) { cards.add(card); if (card.getCardType().contains(CardType.CREATURE)) { creatureCardFound = true; } if (card.getCardType().contains(CardType.LAND)) { landCardFound = true; } } } if (!cards.isEmpty()) { controller.revealCards(sourceObject.getName(), cards, game); if ((creatureCardFound || landCardFound) && controller.chooseUse(Outcome.DrawCard, "Put a creature card and/or a land card into your hand?", source, game)) { TargetCard target = new TargetCard(Zone.LIBRARY, new FilterCreatureCard("creature card to put into your hand")); if (creatureCardFound && controller.chooseTarget(Outcome.DrawCard, cards, target, source, game)) { Card card = cards.get(target.getFirstTarget(), game); if (card != null) { cards.remove(card); controller.moveCards(card, null, Zone.HAND, source, game); } } target = new TargetCard(Zone.LIBRARY, new FilterLandCard("land card to put into your hand")); if (landCardFound && controller.chooseTarget(Outcome.DrawCard, cards, target, source, game)) { Card card = cards.get(target.getFirstTarget(), game); if (card != null) { cards.remove(card); controller.moveCards(card, null, Zone.HAND, source, game); } } } } controller.moveCards(cards, null, Zone.GRAVEYARD, source, game); return true; } return false;}
+110280:614[@Override public boolean apply(Game game, Ability source) { Permanent triggeredCreature = game.getPermanent(getTargetPointer().getFirst(game, source)); Permanent target = game.getPermanent(source.getFirstTarget()); if (triggeredCreature != null && target != null && triggeredCreature.getCardType().contains(CardType.CREATURE) && target.getCardType().contains(CardType.CREATURE)) { triggeredCreature.fight(target, source, game); return true; } return false;}
+110367:614[@Override public KioraFightEffect copy() { return new KioraFightEffect(this);}
+111749:624[@Override public LithomancersFocusPreventDamageToTargetEffect copy() { return new LithomancersFocusPreventDamageToTargetEffect(this);}
+111762:624[@Override public boolean applies(GameEvent event, Ability source, Game game) { if (super.applies(event, source, game) && event.getTargetId().equals(targetPointer.getFirst(game, source))) { MageObject object = game.getObject(event.getSourceId()); return object != null && object.getColor(game).isColorless(); } return false;}
+113119:634[@Override public MundaAmbushLeaderEffect copy() { return new MundaAmbushLeaderEffect(this);}
+113132:634[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); MageObject sourceObject = game.getObject(source.getSourceId()); if (controller != null && sourceObject != null) { Cards allCards = new CardsImpl(); allCards.addAll(controller.getLibrary().getTopCards(game, 4)); controller.lookAtCards(sourceObject.getIdName(), allCards, game); if (!allCards.isEmpty()) { Cards cardsToReveal = new CardsImpl(); TargetCard target = new TargetCard(0, Integer.MAX_VALUE, Zone.LIBRARY, filter); controller.chooseTarget(outcome, allCards, target, source, game); cardsToReveal.addAll(target.getTargets()); if (!cardsToReveal.isEmpty()) { controller.revealCards(sourceObject.getIdName(), cardsToReveal, game, true); allCards.removeAll(cardsToReveal); } controller.putCardsOnTopOfLibrary(cardsToReveal, game, source, true); } if (!allCards.isEmpty()) { controller.putCardsOnBottomOfLibrary(allCards, game, source, true); } return true; } return false;}
+114238:641[@Override public NoyanDarEffect copy() { return new NoyanDarEffect(this);}
+114251:641[@Override public boolean apply(Game game, Ability source) { UUID targetId = null; for (Target target : source.getTargets()) { targetId = target.getFirstTarget(); } if (targetId != null) { FixedTarget fixedTarget = new FixedTarget(targetId); ContinuousEffect continuousEffect = new BecomesCreatureTargetEffect(new AwakenElementalToken(), false, true, Duration.Custom); continuousEffect.setTargetPointer(fixedTarget); game.addEffect(continuousEffect, source); Effect effect = new AddCountersTargetEffect(CounterType.P1P1.createInstance(3)); effect.setTargetPointer(fixedTarget); return effect.apply(game, source); } return true;}
+114578:642[@Override public OblivionSowerEffect copy() { return new OblivionSowerEffect(this);}
+114591:642[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); Player targetPlayer = game.getPlayer(getTargetPointer().getFirst(game, source)); if (controller != null && targetPlayer != null) { FilterLandCard filter = new FilterLandCard(); filter.add(new OwnerIdPredicate(targetPlayer.getId())); Cards exiledCards = new CardsImpl(); exiledCards.addAll(game.getExile().getAllCards(game)); Cards exiledLands = new CardsImpl(); exiledLands.addAll(exiledCards.getCards(filter, source.getSourceId(), controller.getId(), game)); if (!exiledLands.isEmpty() && controller.chooseUse(outcome, "Put lands into play?", source, game)) { FilterCard filterToPlay = new FilterCard("land" + (exiledLands.size() > 1 ? "s" : "") + " from exile owned by " + targetPlayer.getName() + " to put into play under your control"); TargetCard targetCards = new TargetCard(0, exiledLands.size(), Zone.EXILED, filterToPlay); if (controller.chooseTarget(outcome, exiledLands, targetCards, source, game)) { controller.moveCards(new CardsImpl(targetCards.getTargets()), Zone.BATTLEFIELD, source, game); } } return true; } return false;}
+115113:643[@Override public String getRule() { return "Whenever a player draws a card, you lose 2 life.";}
+115123:643[@Override public ObNixilisEmblemTriggeredAbility copy() { return new ObNixilisEmblemTriggeredAbility(this);}
+115813:647[@Override public OnduRisingTriggeredAbility copy() { return new OnduRisingTriggeredAbility(this);}
+115826:647[@Override public String getRule() { return "Whenever a creature attacks this turn, it gains lifelink until end of turn.";}
+116481:652[@Override public PathwayArrowsEffect copy() { return new PathwayArrowsEffect(this);}
+116494:652[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); if (controller != null) { Permanent targetCreature = game.getPermanent(getTargetPointer().getFirst(game, source)); if (targetCreature != null) { int damageDealt = targetCreature.damage(1, source.getSourceId(), game, false, true); if (damageDealt > 0 && targetCreature.getColor(game).isColorless()) { targetCreature.tap(game); } } return true; } return false;}
+117317:658[@Override public void adjustTargets(Ability ability, Game game) { if (ability instanceof EntersBattlefieldTriggeredAbility) { Permanent sourceObject = game.getPermanent(ability.getSourceId()); if (sourceObject != null) { int isolationCounters = sourceObject.getCounters(game).getCount("isolation"); FilterNonlandPermanent filter = new FilterNonlandPermanent("up to " + isolationCounters + " nonland permanents controlled by any opponents"); filter.add(new ControllerPredicate(TargetController.OPPONENT)); ability.addTarget(new TargetPermanent(0, isolationCounters, filter, false)); } }}
+117409:658[@Override public QuarantineField copy() { return new QuarantineField(this);}
+117453:658[@Override public QuarantineFieldEffect copy() { return new QuarantineFieldEffect(this);}
+117466:658[@Override public boolean apply(Game game, Ability source) { Permanent permanent = game.getPermanent(source.getSourceId()); if (permanent != null) { return new ExileTargetEffect(CardUtil.getCardExileZoneId(game, source), permanent.getIdName()).apply(game, source); } return false;}
+120621:682[@Override public SerpentineSpikeEffect copy() { return new SerpentineSpikeEffect(this);}
+120634:682[@Override public boolean apply(Game game, Ability source) { Permanent permanent = game.getPermanent(source.getTargets().get(0).getFirstTarget()); if (permanent != null) { permanent.damage(2, source.getSourceId(), game, false, true); } permanent = game.getPermanent(source.getTargets().get(1).getFirstTarget()); if (permanent != null) { permanent.damage(3, source.getSourceId(), game, false, true); } permanent = game.getPermanent(source.getTargets().get(2).getFirstTarget()); if (permanent != null) { permanent.damage(4, source.getSourceId(), game, false, true); } return true;}
+122322:693[@Override public SmotheringAbominationTriggeredAbility copy() { return new SmotheringAbominationTriggeredAbility(this);}
+122402:693[@Override public String getRule() { return "Whenever you sacrifice a creature, " + super.getRule();}
+122764:696[@Override public SpellShrivelCounterUnlessPaysEffect copy() { return new SpellShrivelCounterUnlessPaysEffect(this);}
+123011:696[@Override public String getText(Mode mode) { return "Counter target spell unless its controller pays {4}. If that spell is countered this way, exile it instead of putting it into its owner's graveyard";}
+123186:697[@Override public StasisSnareExileEffect copy() { return new StasisSnareExileEffect(this);}
+123199:697[@Override public boolean apply(Game game, Ability source) { Permanent permanent = game.getPermanent(source.getSourceId()); if (permanent != null) { return new ExileTargetEffect(CardUtil.getCardExileZoneId(game, source), permanent.getIdName()).apply(game, source); } return false;}
+124711:708[@Override public boolean apply(Game game, Ability source) { RevealTargetFromHandCost cost = (RevealTargetFromHandCost) source.getCosts().get(0); Permanent creature = game.getPermanent(getTargetPointer().getFirst(game, source)); Player controller = game.getPlayer(source.getControllerId()); if (cost != null && creature != null && controller != null) { List<Card> revealedCards = cost.getRevealedCards(); if (!revealedCards.isEmpty()) { Card card = revealedCards.iterator().next(); if (card != null && card.getPower().getValue() >= creature.getPower().getValue()) { controller.moveCards(creature, null, Zone.EXILED, source, game); } } return true; } return false;}
+124848:708[@Override public TitansPresenceEffect copy() { return new TitansPresenceEffect(this);}
+125492:713[@Override public UginsInsightEffect copy() { return new UginsInsightEffect(this);}
+125505:713[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); if (controller != null) { int highCMC = new HighestConvertedManaCostValue().calculate(game, source, this); if (highCMC > 0) { controller.scry(highCMC, source, game); } controller.drawCards(3, game); return true; } return false;}
+125742:714[@Override public UlamogsDespoilerEffect copy() { return new UlamogsDespoilerEffect(this);}
+125755:714[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); if (controller != null) { Target target = new TargetCardInExile(2, 2, filter, null); if (target.canChoose(source.getSourceId(), source.getControllerId(), game)) { if (controller.chooseTarget(outcome, target, source, game)) { Cards cardsToGraveyard = new CardsImpl(target.getTargets()); controller.moveCards(cardsToGraveyard, null, Zone.GRAVEYARD, source, game); return new AddCountersSourceEffect(CounterType.P1P1.createInstance(4)).apply(game, source); } } return true; } return false;}
+126074:715[@Override public UlamogsNullifierEffect copy() { return new UlamogsNullifierEffect(this);}
+126087:715[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); Spell spell = game.getStack().getSpell(source.getFirstTarget()); if (controller != null && spell != null) { Target target = new TargetCardInExile(2, 2, filter, null); if (target.canChoose(source.getSourceId(), source.getControllerId(), game)) { if (controller.chooseTarget(outcome, target, source, game)) { Cards cardsToGraveyard = new CardsImpl(target.getTargets()); controller.moveCards(cardsToGraveyard, null, Zone.GRAVEYARD, source, game); game.getStack().counter(source.getFirstTarget(), source.getSourceId(), game); return true; } } } return false;}
+126603:717[@Override public UlamogExilePermanentsOnCastAbility copy() { return new UlamogExilePermanentsOnCastAbility(this);}
+126616:717[@Override public String getRule() { return "When you cast {this}, " + super.getRule();}
+126660:717[@Override public UlamogAttackTriggeredAbility copy() { return new UlamogAttackTriggeredAbility(this);}
+126781:717[@Override public String getRule() { return new StringBuilder("Whenever {this} attacks, ").append(super.getRule()).toString();}
+126833:717[@Override public UlamogExileLibraryEffect copy() { return new UlamogExileLibraryEffect(this);}
+126846:717[@Override public boolean apply(Game game, Ability source) { Player defender = game.getPlayer(targetPointer.getFirst(game, source)); if (defender != null) { int count = Math.min(defender.getLibrary().size(), 20); for (int i = 0; i < count; i++) { Card card = defender.getLibrary().removeFromTop(game); if (card != null) { card.moveToExile(null, null, source.getSourceId(), game); } } return true; } return false;}
+127125:718[@Override public UndergrowthChampionPreventionEffect copy() { return new UndergrowthChampionPreventionEffect(this);}
+127319:718[@Override public boolean applies(GameEvent event, Ability source, Game game) { if (super.applies(event, source, game)) { if (event.getTargetId().equals(source.getSourceId())) { return true; } } return false;}
+128284:725[@Override public VoidWinnowerCantCastEffect copy() { return new VoidWinnowerCantCastEffect(this);}
+128384:725[@Override public boolean applies(GameEvent event, Ability source, Game game) { if (game.getOpponents(source.getControllerId()).contains(event.getPlayerId())) { Spell spell = game.getStack().getSpell(event.getTargetId()); if (spell != null) { return (spell.getConvertedManaCost() & 1) == 0; } } return false;}
+128479:725[@Override public VoidWinnowerCantBlockEffect copy() { return new VoidWinnowerCantBlockEffect(this);}
+128539:725[@Override public boolean canBlock(Permanent attacker, Permanent blocker, Ability source, Game game) { return false;}
+129446:732[@Override public ZadaHedronGrinderTriggeredAbility copy() { return new ZadaHedronGrinderTriggeredAbility(this);}
+129664:732[@Override public String getRule() { return "Whenever you cast an instant or sorcery spell that targets only {this}, copy that spell for each other creature you control that the spell could target. Each copy targets a different one of those creatures.";}
+129705:732[@Override public ZadaHedronGrinderEffect copy() { return new ZadaHedronGrinderEffect(this);}
+129718:732[@Override public boolean apply(Game game, Ability source) { Spell spell = game.getStack().getSpell(targetPointer.getFirst(game, source)); if (spell == null) { spell = (Spell) game.getLastKnownInformation(targetPointer.getFirst(game, source), Zone.STACK); } Player controller = game.getPlayer(source.getControllerId()); if (spell != null && controller != null) { Target usedTarget = null; setUsedTarget: for (Mode mode : spell.getSpellAbility().getModes().getSelectedModes()) { for (Target target : mode.getTargets()) { if (target.getFirstTarget().equals(source.getSourceId())) { usedTarget = target.copy(); usedTarget.clearChosen(); break setUsedTarget; } } } if (usedTarget == null) { return false; } for (Permanent creature : game.getState().getBattlefield().getAllActivePermanents(new FilterCreaturePermanent(), source.getControllerId(), game)) { if (!creature.getId().equals(source.getSourceId()) && usedTarget.canTarget(source.getControllerId(), creature.getId(), source, game)) { Spell copy = spell.copySpell(); setTarget: for (Mode mode : spell.getSpellAbility().getModes().getSelectedModes()) { for (Target target : mode.getTargets()) { if (target.getClass().equals(usedTarget.getClass())) { target.clearChosen(); } } } } } }}
+130587:737[@Override public boolean apply(Game game, Ability source) { FilterPermanent filterEnchantments = new FilterPermanent(); filterEnchantments.add(new CardTypePredicate(CardType.ENCHANTMENT)); for (Permanent permanent : game.getBattlefield().getActivePermanents(filterEnchantments, source.getControllerId(), source.getSourceId(), game)) { Player controller = game.getPlayer(permanent.getControllerId()); if (controller != null) { controller.damage(2, permanent.getId(), game, false, true); game.informPlayers("2 damage assigned to " + controller.getLogName() + " from " + permanent.getName()); } } filterEnchantments.add(new SubtypePredicate("Aura")); for (Permanent auraEnchantment : game.getBattlefield().getActivePermanents(filterEnchantments, source.getControllerId(), source.getSourceId(), game)) { if (auraEnchantment.getAttachedTo() != null) { Permanent attachedToCreature = game.getPermanent(auraEnchantment.getAttachedTo()); if (attachedToCreature != null && attachedToCreature.getCardType().contains(CardType.CREATURE)) { attachedToCreature.damage(2, auraEnchantment.getId(), game, false, true); game.informPlayers("2 damage assigned to " + attachedToCreature.getName() + " from " + auraEnchantment.getName()); } } } return true;}
+130788:737[@Override public AuraBarbsEffect copy() { return new AuraBarbsEffect(this);}
+130983:738[@Override public boolean apply(Game game, Ability source) { int numberToBoost = 0; for (Cost cost : source.getCosts()) { if (cost instanceof RemoveVariableCountersSourceCost) { numberToBoost = ((RemoveVariableCountersSourceCost) cost).getAmount() * 2; } } if (numberToBoost >= 0) { game.addEffect(new BoostSourceEffect(numberToBoost, 0, Duration.EndOfTurn), source); return true; } return false;}
+131057:738[@Override public BlademaneBakuBoostEffect copy() { return new BlademaneBakuBoostEffect(this);}
+131613:741[@Override public boolean canPay(Ability ability, UUID sourceId, UUID controllerId, Game game) { Permanent permanent = game.getPermanent(sourceId); if (permanent != null) { for (UUID attachmentId : permanent.getAttachments()) { Permanent attachment = game.getPermanent(attachmentId); if (attachment != null && attachment.getId().equals(sourceEquipmentId)) { return true; } } } return false;}
+131691:741[@Override public BlindingPowderUnattachCost copy() { return new BlindingPowderUnattachCost(this);}
+132300:744[@Override public CallForBloodDynamicValue copy() { return this;}
+132320:744[@Override public String toString() { return "-X";}
+133904:754[@Override public EmptyShrineKannushiProtectionAbility copy() { return new EmptyShrineKannushiProtectionAbility(this);}
+134167:754[@Override public String getRule() { return "Empty-Shrine Kannushi has protection from the colors of permanents you control.";}
+134381:756[@Override public boolean apply(Game game, Ability source) { for (Permanent permanent : game.getBattlefield().getActivePermanents(filter, source.getControllerId(), source.getSourceId(), game)) { permanent.moveToExile(null, null, source.getSourceId(), game); } return true;}
+134431:756[@Override public FinalJudgmentEffect copy() { return new FinalJudgmentEffect(this);}
+134684:758[@Override public FlamesOfTheBloodHandReplacementEffect copy() { return new FlamesOfTheBloodHandReplacementEffect(this);}
+134771:758[@Override public boolean replaceEvent(GameEvent event, Ability source, Game game) { return true;}
+137239:771[@Override public GoblinCohortEffect copy() { return new GoblinCohortEffect(this);}
+137266:771[@Override public boolean applies(Permanent permanent, Ability source, Game game) { if (permanent.getId().equals(source.getSourceId())) { PlayerCastCreatureWatcher watcher = (PlayerCastCreatureWatcher) game.getState().getWatchers().get("PlayerCastCreature"); if (watcher != null && !watcher.playerDidCastCreatureThisTurn(source.getControllerId())) { return true; } } return false;}
+137577:773[@Override public GoryosVengeanceEffect copy() { return new GoryosVengeanceEffect(this);}
+137590:773[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); if (controller != null) { Card card = game.getCard(targetPointer.getFirst(game, source)); if (card != null) { if (controller.moveCards(card, Zone.BATTLEFIELD, source, game)) { Permanent permanent = game.getPermanent(card.getId()); if (permanent != null) { ContinuousEffect effect = new GainAbilityTargetEffect(HasteAbility.getInstance(), Duration.Custom); effect.setTargetPointer(new FixedTarget(permanent, game)); game.addEffect(effect, source); Effect exileEffect = new ExileTargetEffect("Exile " + permanent.getName() + " at the beginning of the next end step"); exileEffect.setTargetPointer(new FixedTarget(permanent, game)); DelayedTriggeredAbility delayedAbility = new AtTheBeginOfNextEndStepDelayedTriggeredAbility(exileEffect); delayedAbility.setSourceId(source.getSourceId()); delayedAbility.setControllerId(source.getControllerId()); delayedAbility.setSourceObject(source.getSourceObject(game), game); game.addDelayedTriggeredAbility(delayedAbility); return true; } } } } return false;}
+137943:774[@Override public HeartOfLightEffect copy() { return new HeartOfLightEffect(this);}
+138068:774[@Override public boolean applies(GameEvent event, Ability source, Game game) { if (super.applies(event, source, game) && event instanceof DamageEvent) { Permanent aura = game.getPermanent(source.getSourceId()); if (aura != null && aura.getAttachedTo() != null) { if (event.getSourceId().equals(aura.getAttachedTo()) || event.getTargetId().equals(aura.getAttachedTo())) { return true; } } } return false;}
+138258:775[@Override public boolean apply(Game game, Ability source) { boolean result = false; Player controller = game.getPlayer(source.getControllerId()); if (controller != null) { Card card = controller.getLibrary().removeFromTop(game); if (card != null) { int cmc = card.getManaCost().convertedManaCost(); controller.moveCards(card, Zone.LIBRARY, Zone.GRAVEYARD, source, game); controller.drawCards(cmc, game); } } return result;}
+138352:775[@Override public HeedTheMistsEffect copy() { return new HeedTheMistsEffect(this);}
+139110:779[@Override public HokoriDustDrinkerUntapEffect copy() { return new HokoriDustDrinkerUntapEffect(this);}
+139123:779[@Override public boolean apply(Game game, Ability source) { Player player = game.getPlayer(game.getActivePlayerId()); FilterLandPermanent filter = new FilterLandPermanent("land you control"); filter.add(new ControllerIdPredicate(game.getActivePlayerId())); Target target = new TargetLandPermanent(filter); if (player != null && player.chooseTarget(Outcome.Untap, target, source, game)) { for (UUID landId : target.getTargets()) { Permanent land = game.getPermanent(landId); if (land != null) { land.untap(game); } } return true; } return false;}
+139920:783[@Override public InkEyesServantOfOniEffect copy() { return new InkEyesServantOfOniEffect(this);}
+139933:783[@Override public boolean apply(Game game, Ability source) { Player damagedPlayer = game.getPlayer(targetPointer.getFirst(game, source)); Player you = game.getPlayer(source.getControllerId()); FilterCard filter = new FilterCard("creature in that player's graveyard"); filter.add(new CardTypePredicate(CardType.CREATURE)); filter.add(new OwnerIdPredicate(damagedPlayer.getId())); TargetCardInGraveyard target = new TargetCardInGraveyard(filter); if (target.canChoose(source.getSourceId(), you.getId(), game)) { if (you.chooseTarget(Outcome.PutCreatureInPlay, target, source, game)) { Card card = game.getCard(target.getFirstTarget()); if (card != null) { card.putOntoBattlefield(game, Zone.GRAVEYARD, id, you.getId()); return true; } } } return false;}
+140848:788[@Override public IwamoriOfTheOpenFistEffect copy() { return new IwamoriOfTheOpenFistEffect(this);}
+140861:788[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); if (controller != null) { Cards cards = new CardsImpl(); for (UUID playerId : game.getOpponents(controller.getId())) { Player opponent = game.getPlayer(playerId); Target target = new TargetCardInHand(filter); if (opponent != null && target.canChoose(source.getSourceId(), opponent.getId(), game)) { if (opponent.chooseUse(Outcome.PutCreatureInPlay, "Put a legendary creature card from your hand onto the battlefield?", source, game)) { if (target.chooseTarget(Outcome.PutCreatureInPlay, opponent.getId(), source, game)) { Card card = game.getCard(target.getFirstTarget()); if (card != null) { cards.add(card); } } } } } controller.moveCards(cards.getCards(game), Zone.BATTLEFIELD, source, game, false, false, true, null); return true; } return false;}
+141176:789[@Override public JettingGlasskiteAbility copy() { return new JettingGlasskiteAbility(this);}
+141284:789[@Override public String getRule() { return "Whenever {this} becomes the target of a spell or ability for the first time in a turn, counter that spell or ability.";}
+141732:792[@Override public KentaroTheSmilingCatCastingEffect copy() { return new KentaroTheSmilingCatCastingEffect(this);}
+141814:792[@Override public boolean hasLayer(Layer layer) { return layer == Layer.RulesEffects;}
+142073:793[@Override public KiraGreatGlassSpinnerAbility copy() { return new KiraGreatGlassSpinnerAbility(this);}
+142220:793[@Override public String getRule() { return "Whenever this creature becomes the target of a spell or ability for the first time in a turn, counter that spell or ability.";}
+142426:793[@Override public CreatureWasTargetedThisTurnWatcher copy() { return new CreatureWasTargetedThisTurnWatcher(this);}
+142410:793[@Override public void reset() { super.reset(); creaturesTargeted.clear();}
+142582:794[@Override public KitsunePalliatorEffect copy() { return new KitsunePalliatorEffect(this);}
+142595:794[@Override public boolean apply(Game game, Ability source) { PreventDamageToTargetEffect effect = new PreventDamageToTargetEffect(Duration.EndOfTurn, 1); List<Permanent> permanents = game.getBattlefield().getActivePermanents(new FilterCreaturePermanent(), source.getControllerId(), game); for (Permanent permanent : permanents) { effect.setTargetPointer(new FixedTarget(permanent.getId())); game.addEffect(effect, source); } for (UUID playerId : game.getState().getPlayersInRange(source.getControllerId(), game)) { Player player = game.getPlayer(playerId); if (player != null) { effect.setTargetPointer(new FixedTarget(player.getId())); game.addEffect(effect, source); } } return false;}
+143049:796[@Override public KumanosBlessingEffect copy() { return new KumanosBlessingEffect(this);}
+143156:796[@Override public boolean applies(GameEvent event, Ability source, Game game) { ZoneChangeEvent zce = (ZoneChangeEvent) event; if (zce.isDiesEvent()) { DamagedByEnchantedWatcher watcher = (DamagedByEnchantedWatcher) game.getState().getWatchers().get("DamagedByEnchantedWatcher", source.getSourceId()); if (watcher != null) { return watcher.wasDamaged(zce.getTarget(), game); } } return false;}
+143271:796[@Override public DamagedByEnchantedWatcher copy() { return new DamagedByEnchantedWatcher(this);}
+143390:796[public boolean wasDamaged(Permanent permanent, Game game) { return damagedCreatures.contains(new MageObjectReference(permanent, game));}
+144199:802[@Override public MarkOfSakikoTriggeredAbility copy() { return new MarkOfSakikoTriggeredAbility(this);}
+144326:802[@Override public String getRule() { return "Whenever this creature deals combat damage to a player, add that much {G} to your mana pool. Until end of turn, this mana doesn't empty from your mana pool as steps and phases end.";}
+144929:806[@Override public void adjustTargets(Ability ability, Game game) { if (ability.getOriginalId().equals(originalId)) { for (Effect effect : ability.getEffects()) { if (effect instanceof CantBeBlockedTargetEffect) { int manaX = ability.getManaCostsToPay().getX(); ability.getTargets().clear(); FilterCreaturePermanent newFilter = new FilterCreaturePermanent(new StringBuilder("creature with power ").append(manaX).append(" or less").toString()); filter.add(new PowerPredicate(Filter.ComparisonType.LessThan, manaX + 1)); Target target = new TargetCreaturePermanent(newFilter); ability.addTarget(target); break; } } }}
+145063:806[@Override public MinamoSightbender copy() { return new MinamoSightbender(this);}
+145189:807[@Override public MinamosMeddlingCounterTargetEffect copy() { return new MinamosMeddlingCounterTargetEffect(this);}
+145202:807[@Override public boolean apply(Game game, Ability source) { MageObject sourceObject = game.getObject(source.getSourceId()); if (sourceObject != null) { for (UUID targetId : getTargetPointer().getTargets(game, source)) { Spell spell = game.getStack().getSpell(targetId); if (spell != null) { game.getStack().counter(targetId, source.getSourceId(), game); Player spellController = game.getPlayer(spell.getControllerId()); if (spellController != null) { spellController.revealCards(sourceObject.getName(), spellController.getHand(), game); Cards cardsToDiscard = new CardsImpl(); for (SpellAbility spellAbility : spell.getSpellAbilities()) { if (spellAbility.getSpellAbilityType().equals(SpellAbilityType.SPLICE)) { for (Card card : spellController.getHand().getCards(game)) { if (card.getName().equals(spellAbility.getCardName()) && !cardsToDiscard.contains(card.getId())) { cardsToDiscard.add(card); } } } } if (!cardsToDiscard.isEmpty()) { for (Card card : cardsToDiscard.getCards(game)) { spellController.discard(card, source, game); } } } } } return true; } return false;}
+145526:808[@Override public MirrorGalleryRuleEffect copy() { return new MirrorGalleryRuleEffect(this);}
+145587:808[@Override public boolean hasLayer(Layer layer) { return layer == Layer.RulesEffects;}
+145749:809[@Override public MistbladeShinobiTriggeredAbility copy() { return new MistbladeShinobiTriggeredAbility(this);}
+145882:809[@Override public String getRule() { return "Whenever {this} deals combat damage to a player, you may return target creature that player controls to its owner's hand.";}
+146386:813[@Override public OgreMarauderEffect copy() { return new OgreMarauderEffect(this);}
+146399:813[@Override public boolean apply(Game game, Ability source) { UUID defendingPlayerId = game.getCombat().getDefendingPlayerId(source.getSourceId(), game); MageObject sourceObject = game.getObject(source.getSourceId()); Player defender = game.getPlayer(defendingPlayerId); if (defender != null && sourceObject != null) { Cost cost = new SacrificeTargetCost(new TargetControlledCreaturePermanent()); if (cost.canPay(source, source.getSourceId(), defendingPlayerId, game) && defender.chooseUse(Outcome.LoseAbility, "Sacrifice a creature to prevent that " + sourceObject.getLogName() + " can't be blocked?", source, game)) { if (!cost.pay(source, game, source.getSourceId(), defendingPlayerId, false, null)) { ContinuousEffect effect = new CantBeBlockedSourceEffect(Duration.EndOfTurn); game.addEffect(effect, source); } } return true; } return false;}
+147153:816[@Override public boolean replaceEvent(GameEvent event, Ability source, Game game) { DamageEvent damageEvent = (DamageEvent) event; Permanent sourcePermanent = game.getPermanent(source.getSourceId()); if (sourcePermanent != null) { Permanent targetPermanent = game.getPermanent(event.getTargetId()); StringBuilder message = new StringBuilder(); message.append(sourcePermanent.getName()).append(": gets "); message.append(damageEvent.getAmount()).append(" damage redirected from "); if (targetPermanent != null) { message.append(targetPermanent.getName()); } else { Player targetPlayer = game.getPlayer(event.getTargetId()); if (targetPlayer != null) { message.append(targetPlayer.getLogName()); } else { message.append("unknown"); } } game.informPlayers(message.toString()); discard(); sourcePermanent.damage(damageEvent.getAmount(), damageEvent.getSourceId(), game, damageEvent.isCombatDamage(), damageEvent.isPreventable(), event.getAppliedEffects()); return true; } return false;}
+147331:816[@Override public OpalEyeKondasYojimboRedirectionEffect copy() { return new OpalEyeKondasYojimboRedirectionEffect(this);}
+147451:817[@Override public OrbOfDreamsEffect copy() { return new OrbOfDreamsEffect(this);}
+147533:817[@Override public boolean applies(GameEvent event, Ability source, Game game) { return true;}
+147687:818[@Override public OrnateKanzashiEffect copy() { return new OrnateKanzashiEffect(this);}
+147700:818[@Override public boolean apply(Game game, Ability source) { Player opponent = game.getPlayer(targetPointer.getFirst(game, source)); MageObject sourceObject = game.getObject(source.getSourceId()); if (sourceObject != null && opponent != null) { if (opponent.getLibrary().size() > 0) { Library library = opponent.getLibrary(); Card card = library.getFromTop(game); if (card != null) { opponent.moveCardToExileWithInfo(card, source.getSourceId(), sourceObject.getName(), source.getSourceId(), game, Zone.LIBRARY, true); ContinuousEffect effect = new OrnateKanzashiCastFromExileEffect(); effect.setTargetPointer(new FixedTarget(card.getId())); game.addEffect(effect, source); } } return true; } return false;}
+147892:818[@Override public OrnateKanzashiCastFromExileEffect copy() { return new OrnateKanzashiCastFromExileEffect(this);}
+147905:818[@Override public boolean applies(UUID objectId, Ability source, UUID affectedControllerId, Game game) { return source.getControllerId().equals(affectedControllerId) && objectId.equals(getTargetPointer().getFirst(game, source));}
+148076:819[@Override public FireServantEffect copy() { return new FireServantEffect(this);}
+148178:819[@Override public boolean replaceEvent(GameEvent event, Ability source, Game game) { event.setAmount(event.getAmount() * 2); return false;}
+148802:823[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); if (controller != null) { TargetCard target = new TargetCardInHand(0, 2, new FilterLandCard("up to two land cards to put onto the battlefield tapped")); controller.chooseTarget(outcome, controller.getHand(), target, source, game); return controller.moveCards(new CardsImpl(target.getTargets()).getCards(game), Zone.BATTLEFIELD, source, game, true, false, false, null); } return false;}
+148889:823[@Override public PatronOfTheMoonEffect copy() { return new PatronOfTheMoonEffect(this);}
+149168:824[@Override public String getRule() { return "Whenever a permanent is put into an opponent's graveyard, that player loses 1 life.";}
+149178:824[@Override public PatronOfTheNezumiTriggeredAbility copy() { return new PatronOfTheNezumiTriggeredAbility(this);}
+149380:825[@Override public boolean apply(Game game, Ability source) { Player player = game.getPlayer(source.getControllerId()); if (player != null) { for (Permanent permanent : game.getBattlefield().getActivePermanents(filter, source.getControllerId(), source.getSourceId(), game)) { permanent.untap(game); } return true; } return false;}
+149446:825[@Override public PatronOfTheOrochiEffect copy() { return new PatronOfTheOrochiEffect(this);}
+149932:826[@Override public Mana getMana(Game game, Ability source) { return null;}
+149949:826[@Override public PetalmaneBakuManaEffect copy() { return new PetalmaneBakuManaEffect(this);}
+150144:827[@Override public PhantomWingsReturnEffect copy() { return new PhantomWingsReturnEffect(this);}
+150157:827[@Override public boolean apply(Game game, Ability source) { Permanent permanent = (Permanent) game.getLastKnownInformation(source.getSourceId(), Zone.BATTLEFIELD); if (permanent != null && permanent.getAttachedTo() != null) { Permanent enchantedCreature = game.getPermanent(permanent.getAttachedTo()); if (enchantedCreature != null) { return enchantedCreature.moveToZone(Zone.HAND, source.getSourceId(), game, false); } } return false;}
+150504:829[@Override public void adjustTargets(Ability ability, Game game) { if (ability.getOriginalId().equals(originalId)) { int maxConvManaCost = 0; for (Cost cost : ability.getCosts()) { if (cost instanceof RemoveVariableCountersSourceCost) { maxConvManaCost = ((RemoveVariableCountersSourceCost) cost).getAmount(); } } ability.getTargets().clear(); FilterCreaturePermanent newFilter = new FilterCreaturePermanent("creature with converted mana cost " + maxConvManaCost + " or less"); newFilter.add(new ConvertedManaCostPredicate(Filter.ComparisonType.LessThan, maxConvManaCost + 1)); TargetCreaturePermanent target = new TargetCreaturePermanent(newFilter); ability.getTargets().add(target); }}
+150635:829[@Override public QuillmaneBaku copy() { return new QuillmaneBaku(this);}
+150677:829[@Override public QuillmaneBakuReturnEffect copy() { return new QuillmaneBakuReturnEffect(this);}
+150690:829[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); if (controller == null) { return false; } Permanent permanent = game.getPermanent(this.getTargetPointer().getFirst(game, source)); if (permanent != null) { controller.moveCards(permanent, null, Zone.HAND, source, game); } return true;}
+150900:830[@Override public boolean apply(Game game, Ability source) { for (Permanent creature : game.getBattlefield().getActivePermanents(filter, source.getControllerId(), source.getSourceId(), game)) { creature.moveToZone(Zone.HAND, source.getSourceId(), game, true); } return true;}
+150952:830[@Override public ReduceToDreamsEffect copy() { return new ReduceToDreamsEffect(this);}
+151233:832[@Override public RoarOfJukaiEffect copy() { return new RoarOfJukaiEffect(this);}
+151246:832[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); if (controller != null) { if (new PermanentsOnTheBattlefieldCondition(filter, CountType.MORE_THAN, 0).apply(game, source)) { for (Permanent permanent : game.getBattlefield().getActivePermanents(filterBlocked, source.getControllerId(), source.getSourceId(), game)) { ContinuousEffect effect = new BoostTargetEffect(2, 2, Duration.EndOfTurn); effect.setTargetPointer(new FixedTarget(permanent.getId())); game.addEffect(effect, source); } } return true; } return false;}
+151502:833[@Override public RoninCliffriderEffect copy() { return new RoninCliffriderEffect(this);}
+151515:833[@Override public boolean apply(Game game, Ability source) { UUID defenderId = game.getCombat().getDefenderId(source.getSourceId()); if (defenderId != null) { FilterCreaturePermanent filter = new FilterCreaturePermanent(); filter.add(new ControllerIdPredicate(defenderId)); List<Permanent> permanents = game.getBattlefield().getActivePermanents(filter, source.getControllerId(), source.getSourceId(), game); for (Permanent permanent : permanents) { permanent.damage(1, source.getSourceId(), game, false, true); } return true; } return false;}
+151787:834[@Override public boolean checkTrigger(GameEvent event, Game game) { Permanent permanent = game.getPermanent(event.getTargetId()); if (permanent.getCardType().contains(CardType.CREATURE) && (permanent.getControllerId().equals(this.controllerId))) { if (!this.getTargets().isEmpty()) { if (this.getTargets().get(0).getTargets().size() > 0) { this.getTargets().clear(); this.addTarget(new TargetCreaturePermanent()); } Target target = this.getTargets().get(0); if (target instanceof TargetCreaturePermanent) { target.add(event.getTargetId(), game); } } return true; } return false;}
+151908:834[@Override public RoninWarclubTriggeredAbility copy() { return new RoninWarclubTriggeredAbility(this);}
+151952:834[@Override public RoninWarclubAttachEffect copy() { return new RoninWarclubAttachEffect(this);}
+151965:834[@Override public boolean apply(Game game, Ability source) { Permanent permanent = game.getPermanent(source.getFirstTarget()); Permanent attachment = game.getPermanent(source.getSourceId()); if (permanent != null && attachment != null) { if (attachment.getAttachedTo() != null) { Permanent oldTarget = game.getPermanent(attachment.getAttachedTo()); if (oldTarget != null) { oldTarget.removeAttachment(source.getSourceId(), game); } } boolean result; result = permanent.addAttachment(source.getSourceId(), game); return result; } return false;}
+152214:835[@Override public SakikoMotherOfSummerTriggeredAbility copy() { return new SakikoMotherOfSummerTriggeredAbility(this);}
+152358:835[@Override public String getRule() { return "Whenever a creature you control deals combat damage to a player, add that much {G} to your mana pool. Until end of turn, this mana doesn't empty from your mana pool as steps and phases end.";}
+152872:839[@Override public ScourgeOfNumaiEffect copy() { return new ScourgeOfNumaiEffect(this);}
+152885:839[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); if (controller != null) { if (game.getBattlefield().countAll(new FilterCreaturePermanent("Ogre", "Ogre"), source.getControllerId(), game) < 1) { controller.loseLife(2, game); } return true; } return false;}
+153093:840[@Override public ShimmeringGlasskiteAbility copy() { return new ShimmeringGlasskiteAbility(this);}
+153201:840[@Override public String getRule() { return "Whenever {this} becomes the target of a spell or ability for the first time in a turn, counter that spell or ability.";}
+153436:842[@Override public ShinkaGatekeeperDealDamageEffect copy() { return new ShinkaGatekeeperDealDamageEffect(this);}
+153449:842[@Override public boolean apply(Game game, Ability source) { int amount = (Integer) getValue("damage"); if (amount > 0) { Player player = game.getPlayer(source.getControllerId()); if (player != null) { player.damage(amount, source.getSourceId(), game, false, true); return true; } } return false;}
+153659:843[@Override public ShireiShizosCaretakerTriggeredAbility copy() { return new ShireiShizosCaretakerTriggeredAbility(this);}
+153825:843[@Override public String getRule() { return "Whenever a creature with power 1 or less is put into your graveyard from the battlefield, you may return that card to the battlefield at the beginning of the next end step if Shirei, Shizo's Caretaker is still on the battlefield.";}
+153889:843[@Override public ShireiShizosCaretakerEffect copy() { return new ShireiShizosCaretakerEffect(this);}
+153902:843[@Override public boolean apply(Game game, Ability source) { Card card = game.getCard(this.getTargetPointer().getFirst(game, source)); if (card != null) { Effect effect = new ShireiShizosCaretakerReturnEffect(shireiId); effect.setText("return that card to the battlefield if {this} is still on the battlefield"); DelayedTriggeredAbility delayedAbility = new AtTheBeginOfNextEndStepDelayedTriggeredAbility(effect); delayedAbility.getEffects().get(0).setTargetPointer(new FixedTarget(card.getId())); game.addDelayedTriggeredAbility(delayedAbility, source); return true; } return false;}
+154038:843[@Override public ShireiShizosCaretakerReturnEffect copy() { return new ShireiShizosCaretakerReturnEffect(this);}
+154051:843[@Override public boolean apply(Game game, Ability source) { if (game.getBattlefield().containsPermanent(shireiId)) { return super.apply(game, source); } return false;}
+154644:847[@Override public boolean apply(Game game, Ability source) { int numberToUnboost = 0; for (Cost cost : source.getCosts()) { if (cost instanceof RemoveVariableCountersSourceCost) { numberToUnboost = ((RemoveVariableCountersSourceCost) cost).getAmount() * -1; } } Permanent creature = game.getPermanent(targetPointer.getFirst(game, source)); if (creature != null && numberToUnboost != 0) { creature.addAbility(new SimpleStaticAbility(Zone.BATTLEFIELD, new BoostSourceEffect(numberToUnboost, numberToUnboost, Duration.EndOfTurn)), source.getSourceId(), game, false); } return true;}
+154747:847[@Override public SkullmaneBakuUnboostEffect copy() { return new SkullmaneBakuUnboostEffect(this);}
+154950:848[@Override public SkullsnatcherTriggeredAbility copy() { return new SkullsnatcherTriggeredAbility(this);}
+155078:848[@Override public String getRule() { return "Whenever {this} deals combat damage to a player, " + super.getRule();}
+155249:849[@Override public SlumberingToraEffect copy() { return new SlumberingToraEffect(this);}
+155445:849[@Override public boolean hasLayer(Layer layer) { return layer == Layer.PTChangingEffects_7 || layer == Layer.TypeChangingEffects_4;}
+156137:855[@Override public void adjustTargets(Ability ability, Game game) { ability.getTargets().clear(); int xValue = ability.getManaCostsToPay().getX(); FilterCard filter = new FilterCreatureCard("creature card with converted mana cost " + xValue + " or less from your graveyard"); filter.add(new ConvertedManaCostPredicate(Filter.ComparisonType.LessThan, xValue + 1)); ability.getTargets().add(new TargetCardInYourGraveyard(filter));}
+156221:855[@Override public StirTheGrave copy() { return new StirTheGrave(this);}
+156363:856[@Override public StreamOfConsciousnessEffect copy() { return new StreamOfConsciousnessEffect(this);}
+156376:856[@Override public boolean apply(Game game, Ability source) { Player player = game.getPlayer(source.getFirstTarget()); if (player != null) { List<UUID> targets = source.getTargets().get(1).getTargets(); boolean shuffle = false; for (UUID targetId : targets) { Card card = game.getCard(targetId); if (card != null) { if (player.getGraveyard().contains(card.getId())) { player.getGraveyard().remove(card); card.moveToZone(Zone.LIBRARY, source.getSourceId(), game, true); shuffle = true; } } } if (shuffle) { player.shuffleLibrary(game); } return true; } return false;}
+156542:856[@Override public boolean canTarget(UUID id, Ability source, Game game) { Card card = game.getCard(id); if (card != null && game.getState().getZone(card.getId()) == Zone.GRAVEYARD) { UUID firstTarget = source.getFirstTarget(); if (firstTarget != null && game.getPlayer(firstTarget).getGraveyard().contains(id)) { return filter.match(card, game); } } return false;}
+156627:856[@Override public StreamOfConsciousnessTarget copy() { return new StreamOfConsciousnessTarget(this);}
+156776:857[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); for (UUID playerId : game.getState().getPlayersInRange(controller.getId(), game)) { Player player = game.getPlayer(playerId); if (player != null) { player.moveCards(player.getHand(), Zone.HAND, Zone.LIBRARY, source, game); player.moveCards(player.getGraveyard(), Zone.GRAVEYARD, Zone.LIBRARY, source, game); FilterPermanent filter = new FilterPermanent(); filter.add(new OwnerIdPredicate(playerId)); for (Permanent permanent : game.getBattlefield().getActivePermanents(filter, controller.getId(), source.getSourceId(), game)) { permanent.moveToZone(Zone.LIBRARY, source.getSourceId(), game, true); } player.shuffleLibrary(game); } } return true;}
+156931:857[@Override public SwayOfTheStarsEffect copy() { return new SwayOfTheStarsEffect(this);}
+157254:859[@Override public TakenumaBleederEffect copy() { return new TakenumaBleederEffect(this);}
+157267:859[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); if (controller != null) { if (game.getBattlefield().countAll(new FilterCreaturePermanent("Demon", "Demon"), source.getControllerId(), game) < 1) { controller.loseLife(1, game); } return true; } return false;}
+157955:863[@Override public boolean apply(Game game, Ability source) { Permanent targetPermanent = game.getPermanentOrLKIBattlefield(getTargetPointer().getFirst(game, source)); if (targetPermanent != null) { int cost = targetPermanent.getManaCost().convertedManaCost(); Player player = game.getPlayer(source.getControllerId()); if (player != null) { player.gainLife(cost, game); } } return true;}
+158032:863[@Override public TerashisGraspEffect copy() { return new TerashisGraspEffect(this);}
+158441:866[@Override public ThroatSlitterTriggeredAbility copy() { return new ThroatSlitterTriggeredAbility(this);}
+158580:866[@Override public String getRule() { return "Whenever {this} deals combat damage to a player, destroy target nonblack creature that player controls.";}
+158714:867[@Override public ToilsOfNightAndDayEffect copy() { return new ToilsOfNightAndDayEffect(this);}
+158727:867[@Override public boolean apply(Game game, Ability source) { Player player = game.getPlayer(source.getControllerId()); if (player != null) { for (UUID targetId : source.getTargets().get(0).getTargets()) { Permanent permanent = game.getPermanent(targetId); if (permanent != null) { if (player.chooseUse(Outcome.Tap, new StringBuilder("Tap ").append(permanent.getName()).append("?").toString(), source, game)) { permanent.tap(game); } else if (player.chooseUse(Outcome.Untap, new StringBuilder("Untap ").append(permanent.getName()).append("?").toString(), source, game)) { permanent.untap(game); } } } return true; } return false;}
+159011:868[@Override public TomorrowAzamisFamiliarReplacementEffect copy() { return new TomorrowAzamisFamiliarReplacementEffect(this);}
+159111:868[@Override public boolean applies(GameEvent event, Ability source, Game game) { return event.getPlayerId().equals(source.getControllerId());}
+159487:870[@Override public ToshiroUmezawaEffect copy() { return new ToshiroUmezawaEffect(this);}
+159500:870[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); if (controller != null) { Card card = game.getCard(getTargetPointer().getFirst(game, source)); if (card != null) { controller.cast(card.getSpellAbility(), game, false); game.addEffect(new ToshiroUmezawaReplacementEffect(card.getId()), source); } } return false;}
+159632:870[@Override public ToshiroUmezawaReplacementEffect copy() { return new ToshiroUmezawaReplacementEffect(this);}
+159767:870[@Override public boolean applies(GameEvent event, Ability source, Game game) { ZoneChangeEvent zEvent = (ZoneChangeEvent) event; return zEvent.getToZone() == Zone.GRAVEYARD && ((ZoneChangeEvent) event).getTargetId().equals(cardId);}
+160072:872[@Override public TwistAllegianceEffect copy() { return new TwistAllegianceEffect(this);}
+160085:872[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); Player targetOpponent = game.getPlayer(getTargetPointer().getFirst(game, source)); if (controller != null) { for (Permanent permanent : game.getBattlefield().getActivePermanents(new FilterCreaturePermanent(), source.getControllerId(), source.getSourceId(), game)) { if (permanent.getControllerId().equals(source.getControllerId()) || permanent.getControllerId().equals(targetOpponent.getId())) { UUID newController = permanent.getControllerId().equals(source.getControllerId()) ? targetOpponent.getId() : source.getControllerId(); ContinuousEffect effect = new GainControlTargetEffect(Duration.EndOfTurn, true, newController); effect.setTargetPointer(new FixedTarget(permanent.getId())); game.addEffect(effect, source); permanent.untap(game); effect = new GainAbilityTargetEffect(HasteAbility.getInstance(), Duration.EndOfTurn); effect.setTargetPointer(new FixedTarget(permanent.getId())); game.addEffect(effect, source); } } return true; } return false;}
+160526:873[@Override public UmezawasJitteAbility copy() { return new UmezawasJitteAbility(this);}
+160656:873[@Override public String getRule() { return "Whenever equipped creature deals combat damage, " + super.getRule();}
+160810:874[@Override public UncheckedGrowthTrampleEffect copy() { return new UncheckedGrowthTrampleEffect(this);}
+160823:874[@Override public boolean apply(Game game, Ability source) { int affectedTargets = 0; for (UUID permanentId : targetPointer.getTargets(game, source)) { Permanent permanent = game.getPermanent(permanentId); if (permanent != null && permanent.hasSubtype("Spirit")) { permanent.addAbility(TrampleAbility.getInstance(), game); affectedTargets++; } } return affectedTargets > 0;}
+161459:878[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); Player player = game.getPlayer(targetPointer.getFirst(game, source)); if (player != null && controller != null) { controller.lookAtCards("Walker of Secret Ways", player.getHand(), game); } return true;}
+161525:878[@Override public WalkerOfSecretWaysEffect copy() { return new WalkerOfSecretWaysEffect(this);}
+161720:879[@Override public WardOfPietyPreventDamageTargetEffect copy() { return new WardOfPietyPreventDamageTargetEffect(this);}
+161788:879[@Override public boolean applies(GameEvent event, Ability source, Game game) { Permanent enchantment = game.getPermanent(source.getSourceId()); if (enchantment != null && event.getTargetId().equals(enchantment.getAttachedTo())) { if (redirectToObject.equals(new MageObjectReference(source.getTargets().get(0).getFirstTarget(), game))) { redirectTarget = source.getTargets().get(0); return true; } } return false;}
+162058:880[@Override public boolean apply(Game game, Ability source) { int numberToTap = 0; for (Cost cost : source.getCosts()) { if (cost instanceof RemoveVariableCountersSourceCost) { numberToTap = ((RemoveVariableCountersSourceCost) cost).getAmount(); } } TargetPermanent target = new TargetPermanent(numberToTap, filter); if (target.canChoose(source.getControllerId(), game) && target.choose(Outcome.Tap, source.getControllerId(), source.getSourceId(), game)) { if (!target.getTargets().isEmpty()) { List<UUID> targets = target.getTargets(); for (UUID targetId : targets) { Permanent permanent = game.getPermanent(targetId); if (permanent != null) { permanent.tap(game); } } } return true; } return false;}
+162199:880[@Override public WaxmaneBakuTapEffect copy() { return new WaxmaneBakuTapEffect(this);}
+162497:882[@Override public AcolytesRewardEffect copy() { return new AcolytesRewardEffect(this);}
+162918:882[@Override public boolean applies(GameEvent event, Ability source, Game game) { return !this.used && super.applies(event, source, game) && event.getTargetId().equals(source.getFirstTarget());}
+163768:887[@Override public ArbiterOfTheIdealEffect copy() { return new ArbiterOfTheIdealEffect(this);}
+163781:887[@Override public boolean apply(Game game, Ability source) { Player player = game.getPlayer(source.getControllerId()); if (player == null) { return false; } if (player.getLibrary().size() > 0) { Card card = player.getLibrary().getFromTop(game); Cards cards = new CardsImpl(); cards.add(card); player.revealCards("Arbiter of the Ideal", cards, game); if (card != null) { if (filter.match(card, game) && player.chooseUse(outcome, new StringBuilder("Put ").append(card.getName()).append("onto battlefield?").toString(), source, game)) { card.putOntoBattlefield(game, Zone.LIBRARY, source.getSourceId(), source.getControllerId()); Permanent permanent = game.getPermanent(card.getId()); if (permanent != null) { permanent.addCounters(new Counter("Manifestation"), game); ContinuousEffect effect = new AddCardTypeTargetEffect(CardType.ENCHANTMENT, Duration.Custom); effect.setTargetPointer(new FixedTarget(permanent.getId())); game.addEffect(effect, source); } } } return true; } return false;}
+165251:896[@Override public AstralCornucopiaManaAbility copy() { return new AstralCornucopiaManaAbility(this);}
+165264:896[@Override public List<Mana> getNetMana(Game game) { netMana.clear(); Permanent sourcePermanent = game.getPermanent(getSourceId()); if (sourcePermanent != null) { int counters = sourcePermanent.getCounters().getCount(CounterType.CHARGE.getName()); if (counters > 0) { netMana.add(new Mana(0, 0, 0, 0, 0, 0, counters, 0)); } } return netMana;}
+165388:896[@Override public AstralCornucopiaManaEffect copy() { return new AstralCornucopiaManaEffect(this);}
+165580:896[@Override public Mana getMana(Game game, Ability source) { return null;}
+168324:914[@Override public static HadAnotherCreatureEnterTheBattlefieldCondition getInstance() { return fInstance;}
+168331:914[@Override public boolean apply(Game game, Ability source) { Watcher watcher = game.getState().getWatchers().get("CreatureEnteredBattlefieldLastTurnWatcher", source.getSourceId()); return watcher != null && watcher.conditionMet();}
+168498:914[@Override public void reset() { condition = anotherCreatureEntered; anotherCreatureEntered = false;}
+168514:914[@Override public CreatureEnteredBattlefieldLastTurnWatcher copy() { return new CreatureEnteredBattlefieldLastTurnWatcher(this);}
+169383:920[@Override public FallOfTheHammerDamageEffect copy() { return new FallOfTheHammerDamageEffect(this);}
+169396:920[@Override public boolean apply(Game game, Ability source) { Permanent ownCreature = game.getPermanent(source.getFirstTarget()); if (ownCreature != null) { int damage = ownCreature.getPower().getValue(); Permanent targetCreature = game.getPermanent(source.getTargets().get(1).getFirstTarget()); if (targetCreature != null) { targetCreature.damage(damage, ownCreature.getId(), game, false, true); return true; } } return false;}
+170759:929[@Override public FelhideBrawlerRestrictionEffect copy() { return new FelhideBrawlerRestrictionEffect(this);}
+170795:929[@Override public boolean applies(Permanent permanent, Ability source, Game game) { if (permanent.getId().equals(source.getSourceId()) && game.getBattlefield().count(filter, source.getSourceId(), source.getControllerId(), game) == 0) { return true; } return false;}
+171027:930[@Override public FelhideSpiritbinderEffect copy() { return new FelhideSpiritbinderEffect(this);}
+171040:930[@Override public boolean apply(Game game, Ability source) { Permanent permanent = game.getPermanentOrLKIBattlefield(source.getFirstTarget()); if (permanent != null) { PutTokenOntoBattlefieldCopyTargetEffect effect = new PutTokenOntoBattlefieldCopyTargetEffect(null, CardType.ENCHANTMENT, true); effect.setTargetPointer(getTargetPointer()); if (effect.apply(game, source)) { for (Permanent tokenPermanent : effect.getAddedPermanent()) { ExileTargetEffect exileEffect = new ExileTargetEffect(); exileEffect.setTargetPointer(new FixedTarget(tokenPermanent, game)); DelayedTriggeredAbility delayedAbility = new AtTheBeginOfNextEndStepDelayedTriggeredAbility(exileEffect); game.addDelayedTriggeredAbility(delayedAbility, source); } return true; } } return false;}
+171772:933[@Override public boolean applies(GameEvent event, Ability source, Game game) { return event.getSourceId().equals(source.getSourceId());}
+171800:933[@Override public FloodtideSerpentReplacementEffect copy() { return new FloodtideSerpentReplacementEffect(this);}
+172348:937[@Override public void adjustTargets(Ability ability, Game game) { if (ability instanceof SpellAbility) { ability.getTargets().clear(); int numberToTap = ability.getManaCostsToPay().getX(); numberToTap = Math.min(game.getBattlefield().count(filter, ability.getSourceId(), ability.getControllerId(), game), numberToTap); ability.addTarget(new TargetCreaturePermanent(numberToTap, numberToTap, filter, false)); }}
+172420:937[@Override public GlimpseTheSunGod copy() { return new GlimpseTheSunGod(this);}
+173675:945[@Override public String getMessage() { return filter.getMessage();}
+173687:945[@Override public HeroesPodiumLegendaryCount copy() { return new HeroesPodiumLegendaryCount();}
+173751:945[@Override public HeroesPodiumEffect copy() { return new HeroesPodiumEffect(this);}
+173764:945[@Override public boolean apply(Game game, Ability source) { Player player = game.getPlayer(source.getControllerId()); if (player == null) { return false; } Cards cards = new CardsImpl(); int count = source.getManaCostsToPay().getX(); count = Math.min(player.getLibrary().size(), count); boolean legendaryIncluded = false; for (int i = 0; i < count; i++) { Card card = player.getLibrary().removeFromTop(game); if (card != null) { cards.add(card); if (filter.match(card, game)) { legendaryIncluded = true; } } } player.lookAtCards("Heroes' Podium", cards, game); if (!cards.isEmpty() && legendaryIncluded && player.chooseUse(outcome, "Put a legendary creature card into your hand?", source, game)) { if (cards.size() == 1) { Card card = cards.getRandom(game); cards.remove(card); card.moveToZone(Zone.HAND, source.getSourceId(), game, false); return true; } else { TargetCard target = new TargetCard(Zone.LIBRARY, filter); if (player.choose(outcome, cards, target, game)) { Card card = cards.get(target.getFirstTarget(), game); if (card != null) { cards.remove(card); card.moveToZone(Zone.HAND, source.getSourceId(), game, false); } } } } while (cards.size() > 0) { Card card = cards.getRandom(game); if (card != null) { cards.remove(card); card.moveToZone(Zone.LIBRARY, source.getSourceId(), game, false); } } return true;}
+174356:947[@Override public HeroOfLeinaTowerEffect copy() { return new HeroOfLeinaTowerEffect(this);}
+174369:947[@Override public boolean apply(Game game, Ability source) { Player you = game.getPlayer(source.getControllerId()); ManaCosts cost = new ManaCostsImpl("{X}"); if (you != null && you.chooseUse(Outcome.BoostCreature, "Do you want to to pay {X}?", source, game)) { int costX = you.announceXMana(0, Integer.MAX_VALUE, "Announce the value for {X}", game, source); cost.add(new GenericManaCost(costX)); if (cost.pay(source, game, source.getSourceId(), source.getControllerId(), false, null)) { Permanent sourcePermanent = game.getPermanent(source.getSourceId()); if (sourcePermanent != null) { return new AddCountersSourceEffect(CounterType.P1P1.createInstance(costX), true).apply(game, source); } } } return false;}
+174776:949[@Override public HuntersProwessDrawEffect copy() { return new HuntersProwessDrawEffect(this);}
+174789:949[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); if (controller != null) { int damage = (Integer) this.getValue("damage"); if (damage > 0) { controller.drawCards(damage, game); } return true; } return false;}
+175662:954[@Override public boolean canBeBlocked(Permanent attacker, Permanent blocker, Ability source, Game game) { return blocker.getPower().getValue() >= dynamicValue.calculate(game, source, this);}
+175697:954[@Override public CantBeBlockedByCreaturesWithLessPowerEffect copy() { return new CantBeBlockedByCreaturesWithLessPowerEffect(this);}
+176183:957[@Override public boolean applies(Ability abilityToModify, Ability source, Game game) { if (abilityToModify.getSourceId().equals(source.getSourceId()) && (abilityToModify instanceof SpellAbility)) { return true; } return false;}
+176222:957[@Override public MarshmistTitanCostReductionEffect copy() { return new MarshmistTitanCostReductionEffect(this);}
+176587:959[@Override public MindreaverExileEffect copy() { return new MindreaverExileEffect(this);}
+176600:959[@Override public boolean apply(Game game, Ability source) { UUID exileId = CardUtil.getCardExileZoneId(game, source); MageObject sourceObject = source.getSourceObject(game); Player opponent = game.getPlayer(this.getTargetPointer().getFirst(game, source)); if (opponent != null && sourceObject != null) { for (int i = 0; i < 3; i++) { Card card = opponent.getLibrary().getFromTop(game); if (card != null) { card.moveToExile(exileId, sourceObject.getIdName(), source.getSourceId(), game); } } } return false;}
+177550:961[@Override private String getCostText() { StringBuilder sb = new StringBuilder(); String costText = cost.getText(); if (costText != null && !costText.toLowerCase().startsWith("discard") && !costText.toLowerCase().startsWith("sacrifice") && !costText.toLowerCase().startsWith("remove")) { sb.append("pay "); } return sb.append(costText).toString();}
+177619:961[@Override public DoUnlessTargetPaysCost copy() { return new DoUnlessTargetPaysCost(this);}
+179161:972[@Override public OracleOfBonesCastEffect copy() { return new OracleOfBonesCastEffect(this);}
+179174:972[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); if (controller != null) { Target target = new TargetCardInHand(filter); if (target.canChoose(source.getSourceId(), controller.getId(), game) && controller.chooseUse(outcome, "Cast an instant or sorcery card from your hand without paying its mana cost?", source, game)) { Card cardToCast = null; boolean cancel = false; while (controller.canRespond() && !cancel) { if (controller.chooseTarget(outcome, target, source, game)) { cardToCast = game.getCard(target.getFirstTarget()); if (cardToCast != null && cardToCast.getSpellAbility().canChooseTarget(game)) { cancel = true; } } else { cancel = true; } } if (cardToCast != null) { controller.cast(cardToCast.getSpellAbility(), game, true); } } return true; } return false;}
+179887:976[@Override public PainSeerEffect copy() { return new PainSeerEffect(this);}
+179900:976[@Override public boolean apply(Game game, Ability source) { Player player = game.getPlayer(source.getControllerId()); if (player == null) { return false; } if (player.getLibrary().size() > 0) { Card card = player.getLibrary().getFromTop(game); Cards cards = new CardsImpl(); cards.add(card); player.revealCards("Pain Seer", cards, game); if (card != null && card.moveToZone(Zone.HAND, source.getSourceId(), game, false)) { player.loseLife(card.getManaCost().convertedManaCost(), game); return true; } } return false;}
+180149:977[@Override public PeregrinationEffect copy() { return new PeregrinationEffect(this);}
+180162:977[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); MageObject sourceObject = game.getObject(source.getSourceId()); if (controller == null || sourceObject == null) { return false; } TargetCardInLibrary target = new TargetCardInLibrary(0, 2, new FilterBasicLandCard()); if (controller.searchLibrary(target, game)) { if (target.getTargets().size() > 0) { Cards revealed = new CardsImpl(); for (UUID cardId : target.getTargets()) { Card card = controller.getLibrary().getCard(cardId, game); revealed.add(card); } controller.revealCards(sourceObject.getIdName(), revealed, game); if (target.getTargets().size() == 2) { TargetCard target2 = new TargetCard(Zone.LIBRARY, filter); controller.choose(Outcome.Benefit, revealed, target2, game); Card card = revealed.get(target2.getFirstTarget(), game); controller.moveCards(card, Zone.BATTLEFIELD, source, game, true, false, false, null); revealed.remove(card); card = revealed.getCards(game).iterator().next(); controller.moveCards(card, Zone.HAND, source, game); } else if (target.getTargets().size() == 1) { Card card = revealed.getCards(game).iterator().next(); controller.moveCards(card, Zone.BATTLEFIELD, source, game, true, false, false, null); } } controller.shuffleLibrary(game); return true; } controller.shuffleLibrary(game); return false;}
+180649:978[@Override public String getRule() { return "Whenever an opponent casts a spell, " + super.getRule();}
+180663:978[@Override public PerplexingChimeraTriggeredAbility copy() { return new PerplexingChimeraTriggeredAbility(this);}
+180707:978[@Override public PerplexingChimeraControlExchangeEffect copy() { return new PerplexingChimeraControlExchangeEffect(this);}
+180720:978[@Override public boolean apply(Game game, Ability source) { Spell spell = game.getStack().getSpell(targetPointer.getFirst(game, source)); Player controller = game.getPlayer(source.getControllerId()); if (spell != null && controller != null) { Player spellCaster = game.getPlayer(spell.getControllerId()); spell.setControllerId(controller.getId()); spell.chooseNewTargets(game, controller.getId()); game.informPlayers(controller.getLogName() + " got control of " + spell.getName() + " spell."); if (spellCaster != null) { ContinuousEffect effect = new PerplexingChimeraControlEffect(); effect.setTargetPointer(new FixedTarget(spellCaster.getId())); game.addEffect(effect, source); } } return false;}
+180894:978[@Override public PerplexingChimeraControlEffect copy() { return new PerplexingChimeraControlEffect(this);}
+180907:978[@Override public boolean apply(Game game, Ability source) { Permanent permanent = game.getPermanent(source.getSourceId()); if (permanent != null) { return permanent.changeControllerId(this.getTargetPointer().getFirst(game, source), game); } else { discard(); }}
+182631:991[@Override public void adjustTargets(Ability ability, Game game) { if (ability instanceof SatyrFiredancerTriggeredAbility) { Player opponent = game.getPlayer(ability.getEffects().get(0).getTargetPointer().getFirst(game, ability)); if (opponent != null) { FilterCreaturePermanent filter = new FilterCreaturePermanent("creature controlled by " + opponent.getLogName()); filter.add(new ControllerIdPredicate(opponent.getId())); ability.getTargets().add(new TargetCreaturePermanent(filter)); } }}
+182718:991[@Override public SatyrFiredancer copy() { return new SatyrFiredancer(this);}
+182768:991[@Override public SatyrFiredancerTriggeredAbility copy() { return new SatyrFiredancerTriggeredAbility(this);}
+182820:991[@Override public boolean checkTrigger(GameEvent event, Game game) { if (getControllerId().equals(game.getControllerId(event.getSourceId()))) { MageObject damageSource = game.getObject(event.getSourceId()); if (damageSource != null) { if (game.getOpponents(getControllerId()).contains(event.getTargetId())) { MageObject object = game.getObject(event.getSourceId()); if (object.getCardType().contains(CardType.INSTANT) || object.getCardType().contains(CardType.SORCERY)) { if (!(damageSource instanceof StackObject) || !handledStackObjects.contains(damageSource.getId())) { if (damageSource instanceof StackObject) { handledStackObjects.add(damageSource.getId()); } for (Effect effect : this.getEffects()) { effect.setTargetPointer(new FixedTarget(event.getTargetId())); } } } } } }}
+183305:993[@Override public SatyrWayfinderEffect copy() { return new SatyrWayfinderEffect(this);}
+183318:993[@Override public boolean apply(Game game, Ability source) { Player controller = game.getPlayer(source.getControllerId()); MageObject sourceObject = game.getObject(source.getSourceId()); if (controller != null && sourceObject != null) { Cards cards = new CardsImpl(); cards.addAll(controller.getLibrary().getTopCards(game, 4)); boolean properCardFound = cards.count(filterPutInHand, source.getControllerId(), source.getSourceId(), game) > 0; if (!cards.isEmpty()) { controller.revealCards(sourceObject.getName(), cards, game); TargetCard target = new TargetCard(Zone.LIBRARY, filterPutInHand); if (properCardFound && controller.chooseUse(outcome, "Put a land card into your hand?", source, game) && controller.choose(Outcome.DrawCard, cards, target, game)) { Card card = game.getCard(target.getFirstTarget()); if (card != null) { cards.remove(card); controller.moveCards(card, null, Zone.HAND, source, game); } } controller.moveCards(cards, Zone.LIBRARY, Zone.GRAVEYARD, source, game); } return true; } return false;}
+183732:994[@Override public ScourgeOfSkolaValeEffect copy() { return new ScourgeOfSkolaValeEffect(this);}
+183745:994[@Override public boolean apply(Game game, Ability source) { for (Cost cost : source.getCosts()) { if (cost instanceof SacrificeTargetCost) { int amount = ((SacrificeTargetCost) cost).getPermanents().get(0).getToughness().getValue(); Player player = game.getPlayer(source.getControllerId()); if (amount > 0 && player != null) { return new AddCountersSourceEffect(CounterType.P1P1.createInstance(amount), true).apply(game, source); } } } return false;}
+183974:995[@Override public boolean apply(Game game, Ability source) { for (Permanent creature : game.getBattlefield().getActivePermanents(filter, source.getControllerId(), game)) { if (creature != null) { creature.damage(1, source.getSourceId(), game, false, false); } } return true;}
+184028:995[@Override public ScouringSandsDamageEffect copy() { return new ScouringSandsDamageEffect(this);}
+184153:996[@Override public SearingBloodEffect copy() { return new SearingBloodEffect(this);}
+184166:996[@Override public boolean apply(Game game, Ability source) { DelayedTriggeredAbility delayedAbility = new SearingBloodDelayedTriggeredAbility(source.getFirstTarget()); game.addDelayedTriggeredAbility(delayedAbility, source); return new DamageTargetEffect(2).apply(game, source);}
+184341:996[@Override public SearingBloodDelayedTriggeredAbility copy() { return new SearingBloodDelayedTriggeredAbility(this);}
+184354:996[@Override public String getRule() { return "When that creature dies this turn, {this} deals 3 damage to that creature's controller.";}
+184412:996[@Override public SearingBloodDelayedEffect copy() { return new SearingBloodDelayedEffect(this);}
+184425:996[@Override public boolean apply(Game game, Ability source) { Permanent permanent = (Permanent) game.getLastKnownInformation(target, Zone.BATTLEFIELD); if (permanent != null) { Player player = game.getPlayer(permanent.getControllerId()); if (player != null) { MageObject sourceObject = source.getSourceObject(game); player.damage(3, source.getSourceId(), game, false, true); return true; } } return false;}
+184653:997[@Override public boolean apply(Game game, Ability source) { int lostAmount = 0; for (UUID opponentId : game.getOpponents(source.getControllerId())) { lostAmount += game.getPlayer(opponentId).loseLife(1, game); } game.getPlayer(source.getControllerId()).gainLife(lostAmount, game); return true;}
+184718:997[@Override public ServantOfTymaretEffect copy() { return new ServantOfTymaretEffect(this);}
+7168->7297
+107520->107533
+26626->26639
+153093->153201
+44041->43993
+183305->183318
+165388->165580
+171027->171040
+137239->137266
+87063->87101
+184341->184354
+134684->134771
+31783->31796
+160810->160823
+62507->62520
+25132->24996
+47663->47676
+68142->68052
+65587->65496
+88115->88228
+140848->140861
+91698->91711
+18484->18429
+56372->56385
+41013->40968
+125492->125505
+48182->48195
+153659->153825
+16956->16969
+66108->66121
+22591->22577
+114238->114251
+156221->156137
+32320->32261
+168514->168498
+157254->157267
+97860->97873
+75335->75325
+93257->93104
+68687->68700
+85071->85412
+27215->26994
+23121->23134
+175697->175662
+90196->90209
+70745->70833
+142426->142410
+176222->176183
+184412->184425
+88673->88686
+73827->73778
+74339->74352
+95843->95856
+115813->115826
+61542->61555
+5735->5748
+131691->131613
+150635->150504
+29804->29817
+148076->148178
+31344->31357
+102513->102526
+66672->66685
+138352->138258
+155249->155445
+145526->145587
+18549->18562
+173687->173675
+13432->13445
+42104->42117
+154747->154644
+34938->34813
+126074->126087
+26237->26250
+75900->75826
+14976->14966
+59520->59533
+16513->16433
+19585->19598
+76928->76941
+130->143
+84611->84624
+150144->150157
+111749->111762
+11909->11830
+100996->101009
+105095->105108
+22152->21775
+126603->126616
+46731->46681
+60049->59974
+139920->139933
+83090->83103
+127125->127319
+152214->152358
+109716->109729
+150677->150690
+94877->94863
+180894->180907
+117409->117317
+54945->54904
+77984->77997
+7332->7345
+80037->80075
+145063->144929
+34982->34995
+129705->129718
+36522->36535
+179887->179900
+24242->24232
+68276->68452
+173751->173764
+69817->69830
+149178->149168
+53433->53559
+174776->174789
+103617->103630
+19137->19150
+51394->51345
+65218->65231
+151233->151246
+162497->162918
+12484->12497
+56004->55957
+126660->126781
+35526->35462
+156363->156376
+143049->143156
+117453->117466
+79052->79172
+132300->132320
+82131->82144
+137943->138068
+54999->55012
+1752->1874
+68829->68959
+184028->183974
+130788->130587
+147687->147700
+77542->77622
+57064->57015
+40681->40694
+70378->70391
+158441->158580
+15599->15493
+4338->4113
+142582->142595
+161525->161459
+89848->89861
+107770->107783
+142073->142220
+102141->102225
+159487->159500
+83710->83723
+116481->116494
+156931->156776
+170759->170795
+104198->104211
+14603->14616
+160526->160656
+58126->58139
+109839->109852
+14097->14110
+133904->134167
+174356->174369
+5401->5308
+171800->171772
+86813->86826
+63773->63852
+128284->128384
+134431->134381
+46878->46769
+110367->110280
+159011->159111
+153889->153902
+28454->28467
+95526->95539
+145189->145202
+152872->152885
+120621->120634
+125742->125755
+18224->18359
+43313->43326
+104755->104768
+123186->123199
+23349->23385
+23868->23881
+4927->5007
+24384->24397
+59201->59214
+61761->61774
+95043->95180
+154950->155078
+34629->34609
+144199->144326
+3400->3511
+88905->88918
+42313->42326
+160072->160085
+1357->1370
+72529->72542
+10065->10078
+158032->157955
+58709->58722
+64341->64267
+106327->106340
+22359->22465
+145749->145882
+71515->71528
+107354->107475
+184153->184166
+39261->39274
+153436->153449
+20319->20332
+355->368
+57700->57713
+139110->139123
+51557->51567
+151908->151787
+32615->32766
+72038->72051
+11112->11125
+22889->22967
+137577->137590
+126833->126846
+98674->98687
+46966->46920
+76152->76077
+82808->82712
+141176->141284
+106876->106889
+147331->147153
+165251->165264
+168324->168331
+172420->172348
+7051->6986
+184718->184653
+122764->123011
+1938->2014
+151952->151965
+159632->159767
+114578->114591
+15764->15869
+162199->162058
+17303->17634
+36247->36168
+148889->148802
+63900->64002
+58270->58350
+13730->13813
+50594->50604
+143271->143390
+169383->169396
+141732->141814
+16807->16921
+129446->129664
+150952->150900
+43953->43900
+124848->124711
+115123->115113
+52659->52672
+103861->103874
+154038->154051
+180663->180649
+90039->90052
+147892->147905
+183732->183745
+56759->56772
+180149->180162
+27576->27505
+161720->161788
+163768->163781
+34235->34161
+91069->91082
+182718->182631
+73148->73342
+48062->48139
+149949->149932
+9153->9033
+80832->80845
+149446->149380
+96711->96724
+5577->5692
+176587->176600
+151502->151515
+146386->146399
+156627->156542
+177619->177550
+35283->35344
+122322->122402
+77269->77255
+108502->108670
+179161->179174
+61404->61306
+113119->113132
+128479->128539
+92126->92078
+92640->92764
+180707->180720
+19938->19951
+12772->12805
+1002->1015
+95215->95228
+131057->130983
+28146->28021
+182768->182820
+10742->10755
+67062->67401
+158714->158727
+147451->147533
+10239->10252
+91134->91147
