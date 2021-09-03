@@ -12,9 +12,9 @@ This project refers to neural code generation based on multi-modal fine-grained 
   * bert-serving-client 1.10.0
   * bert-serving-server 1.10.0
 ## Usage
-###To train a new model and to predict the code (HS)
+### To train a new model and to predict the code (HS)
 ```Python3 Model/HS_Trans_tok_AST.py```
-###To train three new model and to predict the code (MTG)
+### To train three new model and to predict the code (MTG)
 ```Python3 Mode/MG_Trans_tok_ADG.py```
 ```Python3 Mode/MG_Trans_tok_AST.py```
 ```Python3 Mode/MG_Trans_tok_AST_ADG.py```
